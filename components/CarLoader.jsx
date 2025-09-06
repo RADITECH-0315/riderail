@@ -1,47 +1,67 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Car } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 
-export default function CarLoader({ show, text = 'Processing your booking…' }) {
-  if (!show) return null;
-
+export default function CarLoader({ loading }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="rounded-2xl bg-neutral-900/80 px-8 py-6 shadow-2xl ring-1 ring-white/10">
-        {/* Road lane + moving car */}
-        <div className="relative mx-auto mb-5 h-16 w-72 overflow-hidden">
-          {/* subtle road baseline */}
-          <div className="absolute inset-x-0 bottom-2 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-          {/* shimmering guide line */}
-          <motion.div
-            initial={{ x: '-100%' }}
-            animate={{ x: '100%' }}
-            transition={{ repeat: Infinity, duration: 1.2, ease: 'linear' }}
-            className="absolute top-1/2 h-[2px] w-1/3 -translate-y-1/2 bg-gradient-to-r from-transparent via-amber-400 to-transparent"
-          />
-          {/* car glide */}
-          <motion.div
-            initial={{ x: -60 }}
-            animate={{ x: 280 }}
-            transition={{ repeat: Infinity, duration: 1.6, ease: 'linear' }}
-            className="absolute bottom-0 left-0"
-          >
-            <Car className="h-10 w-10 text-amber-400 drop-shadow-[0_6px_16px_rgba(255,193,7,0.35)]" />
-          </motion.div>
-        </div>
+    <AnimatePresence>
+      {loading && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.4 }}
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur"
+        >
+          {/* Road Line */}
+          <div className="relative w-96 h-2 bg-yellow-500 rounded-full overflow-hidden">
+            {/* Car Animation */}
+            <motion.div
+              initial={{ x: -100 }}
+              animate={{ x: 420 }}
+              transition={{ repeat: Infinity, duration: 2.5, ease: 'linear' }}
+              className="absolute -top-8"
+            >
+              <Image
+                src="/carloader.png" // ✅ your custom car in public/
+                alt="Car Loader"
+                width={90}
+                height={45}
+                priority
+                className="drop-shadow-xl"
+              />
+            </motion.div>
+          </div>
 
-        {/* indeterminate progress bar */}
-        <div className="mx-auto h-1.5 w-72 overflow-hidden rounded-full bg-white/10">
-          <motion.div
-            className="h-full w-1/3 rounded-full bg-gradient-to-r from-amber-400 to-amber-200"
-            animate={{ x: ['-33%', '133%'] }}
-            transition={{ repeat: Infinity, duration: 1.15, ease: 'linear' }}
-          />
-        </div>
-
-        <p className="mt-4 text-center text-sm font-medium text-white/90">{text}</p>
-      </div>
-    </div>
+          {/* Processing Text */}
+          <div className="mt-8 flex items-center space-x-2 text-white text-lg font-semibold">
+            <span>Processing your booking</span>
+            {/* Animated Dots */}
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ repeat: Infinity, duration: 0.8, repeatType: 'reverse' }}
+            >
+              .
+            </motion.span>
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ repeat: Infinity, duration: 0.8, repeatType: 'reverse', delay: 0.2 }}
+            >
+              .
+            </motion.span>
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ repeat: Infinity, duration: 0.8, repeatType: 'reverse', delay: 0.4 }}
+            >
+              .
+            </motion.span>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

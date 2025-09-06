@@ -3,6 +3,8 @@
 import { useState, useRef } from 'react';
 import { MapPin, Calendar, Clock, Phone, User, Navigation, Car, CheckCircle2, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import CarLoader from './CarLoader';
+import BookingSuccess from './BookingSuccess';
 
 const initial = {
   tripType: 'airport_to_city',
@@ -70,27 +72,7 @@ export default function BookingForm() {
   return (
     <>
       {/* 🚘 Loader */}
-      <AnimatePresence>
-        {loading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur"
-          >
-            <motion.div
-              initial={{ x: -150 }}
-              animate={{ x: 150 }}
-              transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-              className="text-blue-500"
-            >
-              <Car className="h-16 w-16 drop-shadow-lg" />
-            </motion.div>
-            <p className="mt-4 text-lg font-semibold text-white">Processing your booking…</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+       <CarLoader loading={loading} />
       {/* FORM */}
       <form
         onSubmit={onSubmit}
@@ -157,31 +139,8 @@ export default function BookingForm() {
       </form>
 
       {/* ✅ Success Popup */}
-      <AnimatePresence>
-        {success && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 15 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur"
-          >
-            <div className="rounded-2xl bg-white px-8 py-6 text-center shadow-xl ring-1 ring-black/10">
-              <motion.div
-                initial={{ y: -20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                className="mb-3 flex justify-center gap-3"
-              >
-                <Car className="h-10 w-10 text-blue-500" />
-                <CheckCircle2 className="h-10 w-10 text-green-600" />
-              </motion.div>
-              <h3 className="text-2xl font-bold text-gray-800">Booking Confirmed!</h3>
-              <p className="text-gray-600">Ref: {success.bookingId}</p>
-              <p className="text-green-700 font-semibold">Fare: ₹{success.fareINR}</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+       <BookingSuccess data={success} />
+
 
       {/* ❌ Error Popup */}
       <AnimatePresence>
