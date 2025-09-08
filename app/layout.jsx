@@ -22,7 +22,8 @@ export const metadata = {
 };
 
 import "./globals.css";
-import Navbar from "@/components/Navbar"; // ✅ use the new responsive Navbar component
+import Navbar from "@/components/Navbar"; 
+import Script from "next/script"; // ✅ already imported
 
 export default function RootLayout({ children }) {
   return (
@@ -43,6 +44,12 @@ export default function RootLayout({ children }) {
             <p>📧 support@rvmrideway.com • 📱 WhatsApp: +91-XXXXXXXXXX</p>
           </div>
         </footer>
+
+        {/* ✅ Razorpay Script injected correctly */}
+        <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

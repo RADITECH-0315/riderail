@@ -1,3 +1,4 @@
+// app/api/bookings/route.js
 import { connectDB } from "@/lib/db";
 import Booking from "@/models/booking";
 import { computeFare } from "@/lib/fare";
@@ -5,12 +6,12 @@ import { sendWhatsAppText } from "@/lib/whatsapp";
 
 export const runtime = "nodejs";
 
-// Create booking
+// === POST: Create a booking ===
 export async function POST(req) {
   try {
     const body = await req.json();
 
-    // ✅ Validate required fields
+    // Validate required fields
     if (!body.name || !body.phone || !body.tripType || !body.pickupTime) {
       return new Response(
         JSON.stringify({ ok: false, error: "Missing required fields" }),
@@ -18,7 +19,7 @@ export async function POST(req) {
       );
     }
 
-    // ✅ Validate pickupTime
+    // Validate pickupTime
     const pickupTime = new Date(body.pickupTime);
     if (isNaN(pickupTime.getTime())) {
       return new Response(
@@ -27,10 +28,10 @@ export async function POST(req) {
       );
     }
 
-    // ✅ Calculate fare
+    // Compute fare
     const { fare, currency } = computeFare(body);
 
-    // ✅ Connect DB and save booking
+    // Save booking in MongoDB
     await connectDB();
     const doc = await Booking.create({
       name: body.name,
@@ -48,7 +49,7 @@ export async function POST(req) {
       status: "pending",
     });
 
-    // ✅ Optional WhatsApp alert
+    // Optional WhatsApp alert
     if (process.env.ADMIN_WHATSAPP_NUMBER) {
       try {
         const msg = `🚕 New booking: ${doc.name}\nFare: ${fare} ${currency}`;
@@ -67,7 +68,7 @@ export async function POST(req) {
   }
 }
 
-// Get recent bookings
+// === GET: Fetch recent bookings ===
 export async function GET() {
   try {
     await connectDB();
