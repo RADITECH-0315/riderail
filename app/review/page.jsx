@@ -49,38 +49,32 @@ function ReviewContent() {
   if (!booking)
     return <p className="text-center p-6 text-red-500">Booking not found.</p>;
 
+  // ✅ Safe formatting (IST)
+  const formattedTime = booking.pickupTime
+    ? new Date(booking.pickupTime).toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : "Not Provided";
+
   return (
     <div className="max-w-2xl mx-auto mt-10 bg-white p-6 rounded-xl shadow-md space-y-6">
       <h1 className="text-xl font-bold text-slate-900 text-center">
         Review Your Booking
       </h1>
       <div className="space-y-2 text-slate-700">
-        <p>
-          <strong>Name:</strong> {booking.name}
-        </p>
-        <p>
-          <strong>Phone:</strong> {booking.phone}
-        </p>
-        <p>
-          <strong>Trip Type:</strong> {booking.tripType}
-        </p>
-        <p>
-          <strong>Pickup:</strong> {booking.pickup}
-        </p>
-        <p>
-          <strong>Drop:</strong> {booking.drop}
-        </p>
-        <p>
-          <strong>Date & Time:</strong>{" "}
-          {new Date(booking.pickupTime).toLocaleString("en-IN", {
-            dateStyle: "medium",
-            timeStyle: "short",
-          })}
-        </p>
-
-        <p>
-          <strong>Fare:</strong> ₹{booking.fare}
-        </p>
+        <p><strong>Name:</strong> {booking.name}</p>
+        <p><strong>Phone:</strong> {booking.phone}</p>
+        <p><strong>Trip Type:</strong> {booking.tripType}</p>
+        <p><strong>Pickup:</strong> {booking.pickup}</p>
+        <p><strong>Drop:</strong> {booking.drop}</p>
+        <p><strong>Date & Time:</strong> {formattedTime}</p>
+        <p><strong>Fare:</strong> ₹{booking.fare}</p>
       </div>
       <button
         onClick={handlePay}

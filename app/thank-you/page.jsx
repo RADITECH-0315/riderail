@@ -30,6 +30,19 @@ function ThankYouContent() {
       </p>
     );
 
+  // ✅ Safe formatting (IST)
+  const formattedTime = booking.pickupTime
+    ? new Date(booking.pickupTime).toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : "Not Provided";
+
   return (
     <div className="max-w-2xl mx-auto mt-10 bg-white p-6 rounded-xl shadow-md space-y-6 text-slate-800">
       <h1 className="text-2xl font-bold text-center text-green-600">
@@ -39,38 +52,15 @@ function ThankYouContent() {
         Thank you for your booking. Here are your ride details:
       </p>
       <div className="space-y-2">
-        <p>
-          <strong>Name:</strong> {booking.name}
-        </p>
-        <p>
-          <strong>Phone:</strong> {booking.phone}
-        </p>
-        <p>
-          <strong>Trip Type:</strong> {booking.tripType}
-        </p>
-        <p>
-          <strong>Pickup:</strong> {booking.pickup || booking.pickupAddress}
-        </p>
-        <p>
-          <strong>Drop:</strong> {booking.drop || booking.dropAddress}
-        </p>
-        <p>
-          <strong>Date & Time:</strong>{" "}
-          {new Date(booking.pickupTime).toLocaleString("en-IN", {
-            dateStyle: "medium",
-            timeStyle: "short",
-          })}
-        </p>
-
-        <p>
-          <strong>Fare:</strong> ₹{booking.fare}
-        </p>
-        <p>
-          <strong>Status:</strong> {booking.status}
-        </p>
-        <p>
-          <strong>Payment Status:</strong> {booking.paymentStatus}
-        </p>
+        <p><strong>Name:</strong> {booking.name}</p>
+        <p><strong>Phone:</strong> {booking.phone}</p>
+        <p><strong>Trip Type:</strong> {booking.tripType}</p>
+        <p><strong>Pickup:</strong> {booking.pickup || booking.pickupAddress}</p>
+        <p><strong>Drop:</strong> {booking.drop || booking.dropAddress}</p>
+        <p><strong>Date & Time:</strong> {formattedTime}</p>
+        <p><strong>Fare:</strong> ₹{booking.fare}</p>
+        <p><strong>Status:</strong> {booking.status}</p>
+        <p><strong>Payment Status:</strong> {booking.paymentStatus}</p>
       </div>
       <div className="text-center mt-6">
         <a

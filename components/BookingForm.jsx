@@ -13,23 +13,23 @@ export default function BookingForm() {
   const [tripType, setTripType] = useState("airport_city");
 
   const [pickupInput, setPickupInput] = useState("");
-  const [pickup, setPickup] = useState(""); // ✅ renamed
+  const [pickup, setPickup] = useState("");
   const [pickupLat, setPickupLat] = useState(null);
   const [pickupLon, setPickupLon] = useState(null);
 
   const [dropInput, setDropInput] = useState("");
-  const [drop, setDrop] = useState(""); // ✅ renamed
+  const [drop, setDrop] = useState("");
   const [dropLat, setDropLat] = useState(null);
   const [dropLon, setDropLon] = useState(null);
 
-  const [pickupTime, setPickupTime] = useState("");
+  const [pickupTime, setPickupTime] = useState(""); // ✅ keep raw local string
   const [minDateTime, setMinDateTime] = useState("");
   const [loading, setLoading] = useState(false);
 
   const [pSuggestions, setPSuggestions] = useState([]);
   const [dSuggestions, setDSuggestions] = useState([]);
 
-  // debounce helper
+  // --- debounce helper
   const debounceRef = useRef({});
   function debounced(key, fn, delay = 400) {
     return (...args) => {
@@ -39,6 +39,7 @@ export default function BookingForm() {
     };
   }
 
+  // --- search function
   async function searchLiq(q) {
     if (!q?.trim()) return [];
     try {
@@ -51,6 +52,7 @@ export default function BookingForm() {
     }
   }
 
+  // --- Debounced searches
   const runPickupSearch = useMemo(
     () =>
       debounced("pickup", async (val) => {
@@ -83,6 +85,7 @@ export default function BookingForm() {
     []
   );
 
+  // --- Pickup & Drop inputs
   function handlePickupInput(e) {
     const val = e.target.value;
     setPickupInput(val);
@@ -108,6 +111,7 @@ export default function BookingForm() {
     setPickupLon(s.lon);
     setPSuggestions([]);
   }
+
   function chooseDrop(s) {
     setDropInput(s.label);
     setDrop(s.label);
@@ -123,7 +127,7 @@ export default function BookingForm() {
     }, 150);
   };
 
-  // --- min datetime
+  // --- Set min datetime = now
   useEffect(() => {
     const now = new Date();
     const pad = (n) => String(n).padStart(2, "0");
@@ -143,19 +147,20 @@ export default function BookingForm() {
           setName(data.name || "");
           setPhone(data.phone || "");
           setTripType(data.tripType || "airport_city");
-          setPickupInput(data.pickup || ""); // ✅ schema aligned
+          setPickupInput(data.pickup || "");
           setPickup(data.pickup || "");
           setPickupLat(data.pickupLat || null);
           setPickupLon(data.pickupLon || null);
-          setDropInput(data.drop || ""); // ✅ schema aligned
+          setDropInput(data.drop || "");
           setDrop(data.drop || "");
           setDropLat(data.dropLat || null);
           setDropLon(data.dropLon || null);
-          setPickupTime(data.pickupTime || "");
+          setPickupTime(data.pickupTime || ""); // ✅ don’t convert, just use stored local string
         }
       });
   }, [bookingId]);
 
+  // --- Ensure coordinates
   async function ensureCoords() {
     let finalPickupLat = pickupLat;
     let finalPickupLon = pickupLon;
@@ -192,6 +197,7 @@ export default function BookingForm() {
     };
   }
 
+  // --- Submit
   async function onSubmit(e) {
     e.preventDefault();
 
@@ -215,13 +221,13 @@ export default function BookingForm() {
         name,
         phone,
         tripType,
-        pickup: finalPickupLabel, // ✅ schema aligned
-        drop: finalDropLabel, // ✅ schema aligned
+        pickup: finalPickupLabel,
+        drop: finalDropLabel,
         pickupLat: finalPickupLat,
         pickupLon: finalPickupLon,
         dropLat: finalDropLat,
         dropLon: finalDropLon,
-        pickupTime,
+        pickupTime, // ✅ raw local datetime string
       };
 
       let res;
@@ -358,10 +364,7 @@ export default function BookingForm() {
         value={pickupTime}
         min={minDateTime}
         step="60"
-        onChange={(e) => {
-          const localValue = e.target.value; // "2025-10-01T09:49"
-          setPickupTime(localValue); // ✅ save as local, not UTC
-        }}
+        onChange={(e) => setPickupTime(e.target.value)} // ✅ no UTC conversion
         required
         className="form-input"
       />

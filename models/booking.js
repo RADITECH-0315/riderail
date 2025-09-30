@@ -1,6 +1,15 @@
 // /models/booking.js
-import mongoose, { Schema } from "mongoose";
+import mongoose from "mongoose";
 
+const { Schema } = mongoose;
+
+/**
+ * IMPORTANT ABOUT TIME:
+ * - Store pickupTime as a STRING in local time (e.g. "2025-10-01T11:45")
+ *   so MongoDB/Node won't auto-convert it to UTC.
+ * - When displaying, format with:
+ *     new Date(booking.pickupTime).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", ... })
+ */
 const BookingSchema = new Schema(
   {
     // Customer Info
@@ -15,16 +24,17 @@ const BookingSchema = new Schema(
       required: true,
     },
 
-    // Pickup & Drop Info
-    pickup: { type: String, required: true }, // label/address
-    pickupLat: { type: Number, required: true },
-    pickupLon: { type: Number, required: true },
+    // Pickup & Drop (labels/addresses + coordinates)
+    pickup:   { type: String, required: true },
+    pickupLat:{ type: Number, required: true },
+    pickupLon:{ type: Number, required: true },
 
-    drop: { type: String, required: true }, // label/address
-    dropLat: { type: Number, required: true },
-    dropLon: { type: Number, required: true },
+    drop:     { type: String, required: true },
+    dropLat:  { type: Number, required: true },
+    dropLon:  { type: Number, required: true },
 
-    pickupTime: { type: Date, required: true },
+    // Store as local string "YYYY-MM-DDTHH:mm"
+    pickupTime: { type: String, required: true },
 
     // Ride Info
     passengers: { type: Number, default: 1 },
@@ -36,7 +46,9 @@ const BookingSchema = new Schema(
 
     // Distance & Fare
     distanceKm: Number,
+    durationMin: Number, // <- your APIs compute this; keep it
     fare: Number,
+    currency: { type: String, default: "INR" },
 
     // Booking Status
     status: {
@@ -52,7 +64,7 @@ const BookingSchema = new Schema(
       enum: ["created", "paid", "failed"],
       default: "created",
     },
-    upiTransactionId: { type: String },
+    upiTransactionId: String,
 
     // Notifications
     whatsappMessageId: String,
@@ -61,11 +73,13 @@ const BookingSchema = new Schema(
     // Driver Assignment
     assignedDriverId: String,
 
+    // Misc metadata (e.g., distanceSource)
+    meta: Schema.Types.Mixed,
+
     // Link to logged-in user
     userId: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );
 
-export default mongoose.models.Booking ||
-  mongoose.model("Booking", BookingSchema);
+export default mongoose.models.Booking || mongoose.model("Booking", BookingSchema);
