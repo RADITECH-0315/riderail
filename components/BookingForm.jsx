@@ -355,20 +355,15 @@ export default function BookingForm() {
       {/* Pickup Time */}
       <input
         type="datetime-local"
-        value={
-          pickupTime ? new Date(pickupTime).toISOString().slice(0, 16) : ""
-        }
+        value={pickupTime}
         min={minDateTime}
         step="60"
         onChange={(e) => {
-          const localValue = e.target.value; // "2025-10-31T14:30"
-          const isoString = new Date(localValue).toISOString();
-          setPickupTime(isoString); // ✅ always store ISO
+          setPickupTime(e.target.value); // ✅ keep local string, don't convert to ISO here
         }}
         required
         className="form-input"
       />
-
       <button
         type="submit"
         disabled={loading}
