@@ -359,11 +359,13 @@ export default function BookingForm() {
         min={minDateTime}
         step="60"
         onChange={(e) => {
-          setPickupTime(e.target.value); // ✅ keep local string, don't convert to ISO here
+          const localValue = e.target.value; // "2025-10-01T09:49"
+          setPickupTime(localValue); // ✅ save as local, not UTC
         }}
         required
         className="form-input"
       />
+
       <button
         type="submit"
         disabled={loading}

@@ -60,7 +60,8 @@ function ThankYouContent() {
             dateStyle: "medium",
             timeStyle: "short",
           })}
-        </p>{" "}
+        </p>
+
         <p>
           <strong>Fare:</strong> ₹{booking.fare}
         </p>
