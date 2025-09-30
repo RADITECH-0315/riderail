@@ -21,9 +21,14 @@ function ThankYouContent() {
       .catch(() => setLoading(false));
   }, [bookingId]);
 
-  if (loading) return <p className="text-center p-6">Loading your booking...</p>;
+  if (loading)
+    return <p className="text-center p-6">Loading your booking...</p>;
   if (!booking)
-    return <p className="text-center p-6 text-red-500">Booking not found. Please contact support.</p>;
+    return (
+      <p className="text-center p-6 text-red-500">
+        Booking not found. Please contact support.
+      </p>
+    );
 
   const formattedTime = booking.pickupTime
     ? new Date(booking.pickupTime).toLocaleString("en-IN", {
@@ -39,20 +44,44 @@ function ThankYouContent() {
 
   return (
     <div className="max-w-2xl mx-auto mt-10 bg-white p-6 rounded-xl shadow-md space-y-6 text-slate-800">
-      <h1 className="text-2xl font-bold text-center text-green-600">✅ Payment Successful!</h1>
-      <p className="text-center text-gray-600">Thank you for your booking. Here are your ride details:</p>
+      <h1 className="text-2xl font-bold text-center text-green-600">
+        ✅ Payment Successful!
+      </h1>
+      <p className="text-center text-gray-600">
+        Thank you for your booking. Here are your ride details:
+      </p>
 
       <div className="space-y-2">
-        <p><strong>Name:</strong> {booking.name}</p>
-        <p><strong>Phone:</strong> {booking.phone}</p>
-        <p><strong>Trip Type:</strong> {booking.tripType}</p>
-        <p><strong>Pickup:</strong> {booking.pickup || booking.pickupAddress}</p>
-        <p><strong>Drop:</strong> {booking.drop || booking.dropAddress}</p>
-        <p><strong>Date & Time:</strong> {formattedTime}</p>
-        <p><strong>Passengers:</strong> {booking.passengers ?? 1}</p>
-        <p><strong>Fare:</strong> ₹{booking.fare}</p>
-        <p><strong>Status:</strong> {booking.status}</p>
-        <p><strong>Payment Status:</strong> {booking.paymentStatus}</p>
+        <p>
+          <strong>Name:</strong> {booking.name}
+        </p>
+        <p>
+          <strong>Phone:</strong> {booking.phone}
+        </p>
+        <p>
+          <strong>Trip Type:</strong> {booking.tripType}
+        </p>
+        <p>
+          <strong>Pickup:</strong> {booking.pickup || booking.pickupAddress}
+        </p>
+        <p>
+          <strong>Drop:</strong> {booking.drop || booking.dropAddress}
+        </p>
+        <p>
+          <strong>Date & Time:</strong> {formattedTime}
+        </p>
+        <p>
+          <strong>Passengers:</strong> {booking.passengers ?? 1}
+        </p>
+        <p>
+          <strong>Fare:</strong> ₹{booking.fare}
+        </p>
+        <p>
+          <strong>Status:</strong> {booking.status}
+        </p>
+        <p>
+          <strong>Payment Status:</strong> {booking.paymentStatus}
+        </p>
       </div>
 
       <div className="flex items-center justify-center gap-3 mt-6">
@@ -67,6 +96,14 @@ function ThankYouContent() {
           className="inline-block bg-[var(--brand)] px-6 py-3 rounded-lg font-semibold text-slate-900 hover:bg-yellow-500 transition"
         >
           Book Another Ride
+        </a>
+        <a
+          className="inline-block mt-4 underline text-blue-600"
+          href={`/api/invoice/${booking.id || booking._id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Download Invoice (JSON)
         </a>
       </div>
     </div>

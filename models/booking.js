@@ -1,104 +1,79 @@
 // /models/booking.js
 import mongoose from "mongoose";
-
 const { Schema } = mongoose;
 
 /**
- * Booking Schema
- *
- * IMPORTANT: pickupTime is stored as a STRING in local time
- *   (format: "YYYY-MM-DDTHH:mm").
- * This prevents automatic UTC conversion by MongoDB.
- * Always format for display using:
- *
- *   new Date(booking.pickupTime).toLocaleString("en-IN", {
- *     timeZone: "Asia/Kolkata",
- *     day: "2-digit",
- *     month: "short",
- *     year: "numeric",
- *     hour: "2-digit",
- *     minute: "2-digit",
- *     hour12: true,
- *   })
+ * TIME NOTE:
+ * pickupTime is a STRING in local time "YYYY-MM-DDTHH:mm"
+ * Keep it as-is to avoid UTC shifts on serverless.
  */
 const BookingSchema = new Schema(
   {
-    /** Customer Info */
-    name:   { type: String, required: true },
-    phone:  { type: String, required: true },
-    email:  { type: String },
+    // Customer
+    name: { type: String, required: true },
+    phone: { type: String, required: true },
+    email: String,
 
-    /** Trip Info */
+    // Trip
     tripType: {
       type: String,
-      enum: [
-        "airport_city",
-        "city_airport",
-        "city_city",
-        "outstation",
-        "rental",
-        "local",
-      ],
+      enum: ["airport_city", "city_airport", "city_city", "outstation", "rental", "local"],
       required: true,
     },
 
-    /** Pickup & Drop Info */
-    pickup:    { type: String, required: true }, // address/label
-    pickupLat: { type: Number, required: true },
-    pickupLon: { type: Number, required: true },
+    // Locations
+    pickup:   { type: String, required: true },
+    pickupLat:{ type: Number, required: true },
+    pickupLon:{ type: Number, required: true },
 
-    drop:      { type: String, required: true }, // address/label
-    dropLat:   { type: Number, required: true },
-    dropLon:   { type: Number, required: true },
+    drop:     { type: String, required: true },
+    dropLat:  { type: Number, required: true },
+    dropLon:  { type: Number, required: true },
 
-    /** Time (store as string, not Date) */
+    // Time (local string, not Date)
     pickupTime: { type: String, required: true }, // e.g. "2025-10-01T11:45"
 
-    /** Ride Info */
-    passengers:  { type: Number, default: 1 },
-    vehicleType: {
-      type: String,
-      enum: ["sedan", "suv", "premium"],
-      default: "sedan",
-    },
+    // Ride
+    passengers: { type: Number, default: 1, min: 1 },
+    vehicleType: { type: String, enum: ["sedan", "suv", "premium"], default: "sedan" },
 
-    /** Distance & Fare */
+    // Calculated
     distanceKm: Number,
     durationMin: Number,
     fare: Number,
     currency: { type: String, default: "INR" },
 
-    /** Booking Status */
+    // Status
     status: {
       type: String,
       enum: ["pending", "confirmed", "assigned", "completed", "cancelled"],
       default: "pending",
     },
 
-    /** Payment Tracking */
-    paymentOrderId: String,
-    paymentStatus: {
-      type: String,
-      enum: ["created", "paid", "failed"],
-      default: "created",
-    },
+    // Payments
+    paymentOrderId: String, // gateway order id (if used)
+    paymentStatus: { type: String, enum: ["created", "paid", "failed"], default: "created" },
     upiTransactionId: String,
+    stripeSessionId: String,
+    stripePaymentIntentId: String,
 
-    /** Notifications */
+    // Invoice
+    invoiceId: String, // set after payment success
+
+    // Messaging
     whatsappMessageId: String,
     emailMessageId: String,
 
-    /** Driver Assignment */
+    // Driver
     assignedDriverId: String,
 
-    /** Misc metadata (like distance source, API logs, etc.) */
+    // Misc
     meta: Schema.Types.Mixed,
 
-    /** Link to logged-in user (if registered) */
+    // Optional auth link
     userId: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );
 
-export default mongoose.models.Booking ||
-  mongoose.model("Booking", BookingSchema);
+export default mongoose.models.Booking || mongoose.model("Booking", BookingSchema);
