@@ -62,8 +62,8 @@ export async function PUT(req, { params }) {
       name,
       phone,
       tripType,
-      pickup,       // ✅ correct field
-      drop,         // ✅ correct field
+      pickup,
+      drop,
       pickupTime,
       passengers,
       vehicleType,
@@ -85,7 +85,7 @@ export async function PUT(req, { params }) {
     if (pickup !== undefined && pickup !== "") booking.pickup = pickup;
     if (drop !== undefined && drop !== "") booking.drop = drop;
     if (pickupTime !== undefined && pickupTime !== "")
-      booking.pickupTime = new Date(pickupTime);
+      booking.pickupTime = pickupTime; // ✅ store as string
     if (passengers !== undefined) booking.passengers = passengers;
     if (vehicleType !== undefined) booking.vehicleType = vehicleType;
     if (status !== undefined) booking.status = status;
@@ -94,7 +94,6 @@ export async function PUT(req, { params }) {
 
     await booking.save();
 
-    // strip internal fields
     const { _id, __v, ...rest } = booking.toObject();
 
     return NextResponse.json({

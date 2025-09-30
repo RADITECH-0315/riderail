@@ -4,60 +4,78 @@ import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 /**
- * IMPORTANT ABOUT TIME:
- * - Store pickupTime as a STRING in local time (e.g. "2025-10-01T11:45")
- *   so MongoDB/Node won't auto-convert it to UTC.
- * - When displaying, format with:
- *     new Date(booking.pickupTime).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", ... })
+ * Booking Schema
+ *
+ * IMPORTANT: pickupTime is stored as a STRING in local time
+ *   (format: "YYYY-MM-DDTHH:mm").
+ * This prevents automatic UTC conversion by MongoDB.
+ * Always format for display using:
+ *
+ *   new Date(booking.pickupTime).toLocaleString("en-IN", {
+ *     timeZone: "Asia/Kolkata",
+ *     day: "2-digit",
+ *     month: "short",
+ *     year: "numeric",
+ *     hour: "2-digit",
+ *     minute: "2-digit",
+ *     hour12: true,
+ *   })
  */
 const BookingSchema = new Schema(
   {
-    // Customer Info
-    name: { type: String, required: true },
-    phone: { type: String, required: true },
-    email: { type: String },
+    /** Customer Info */
+    name:   { type: String, required: true },
+    phone:  { type: String, required: true },
+    email:  { type: String },
 
-    // Trip Info
+    /** Trip Info */
     tripType: {
       type: String,
-      enum: ["airport_city", "city_airport", "city_city", "outstation", "rental", "local"],
+      enum: [
+        "airport_city",
+        "city_airport",
+        "city_city",
+        "outstation",
+        "rental",
+        "local",
+      ],
       required: true,
     },
 
-    // Pickup & Drop (labels/addresses + coordinates)
-    pickup:   { type: String, required: true },
-    pickupLat:{ type: Number, required: true },
-    pickupLon:{ type: Number, required: true },
+    /** Pickup & Drop Info */
+    pickup:    { type: String, required: true }, // address/label
+    pickupLat: { type: Number, required: true },
+    pickupLon: { type: Number, required: true },
 
-    drop:     { type: String, required: true },
-    dropLat:  { type: Number, required: true },
-    dropLon:  { type: Number, required: true },
+    drop:      { type: String, required: true }, // address/label
+    dropLat:   { type: Number, required: true },
+    dropLon:   { type: Number, required: true },
 
-    // Store as local string "YYYY-MM-DDTHH:mm"
-    pickupTime: { type: String, required: true },
+    /** Time (store as string, not Date) */
+    pickupTime: { type: String, required: true }, // e.g. "2025-10-01T11:45"
 
-    // Ride Info
-    passengers: { type: Number, default: 1 },
+    /** Ride Info */
+    passengers:  { type: Number, default: 1 },
     vehicleType: {
       type: String,
       enum: ["sedan", "suv", "premium"],
       default: "sedan",
     },
 
-    // Distance & Fare
+    /** Distance & Fare */
     distanceKm: Number,
-    durationMin: Number, // <- your APIs compute this; keep it
+    durationMin: Number,
     fare: Number,
     currency: { type: String, default: "INR" },
 
-    // Booking Status
+    /** Booking Status */
     status: {
       type: String,
       enum: ["pending", "confirmed", "assigned", "completed", "cancelled"],
       default: "pending",
     },
 
-    // Payment Tracking
+    /** Payment Tracking */
     paymentOrderId: String,
     paymentStatus: {
       type: String,
@@ -66,20 +84,21 @@ const BookingSchema = new Schema(
     },
     upiTransactionId: String,
 
-    // Notifications
+    /** Notifications */
     whatsappMessageId: String,
     emailMessageId: String,
 
-    // Driver Assignment
+    /** Driver Assignment */
     assignedDriverId: String,
 
-    // Misc metadata (e.g., distanceSource)
+    /** Misc metadata (like distance source, API logs, etc.) */
     meta: Schema.Types.Mixed,
 
-    // Link to logged-in user
+    /** Link to logged-in user (if registered) */
     userId: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );
 
-export default mongoose.models.Booking || mongoose.model("Booking", BookingSchema);
+export default mongoose.models.Booking ||
+  mongoose.model("Booking", BookingSchema);

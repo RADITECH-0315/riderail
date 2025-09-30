@@ -5,9 +5,8 @@ import { useSearchParams } from "next/navigation";
 
 export default function BookingForm() {
   const searchParams = useSearchParams();
-  const bookingId = searchParams.get("id"); // detect edit mode
+  const bookingId = searchParams.get("id");
 
-  // States
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [tripType, setTripType] = useState("airport_city");
@@ -22,14 +21,16 @@ export default function BookingForm() {
   const [dropLat, setDropLat] = useState(null);
   const [dropLon, setDropLon] = useState(null);
 
-  const [pickupTime, setPickupTime] = useState(""); // ✅ keep raw local string
+  // ✅ keep local string like "YYYY-MM-DDTHH:mm"
+  const [pickupTime, setPickupTime] = useState("");
   const [minDateTime, setMinDateTime] = useState("");
+  const [passengers, setPassengers] = useState(1); // ✅ NEW
   const [loading, setLoading] = useState(false);
 
   const [pSuggestions, setPSuggestions] = useState([]);
   const [dSuggestions, setDSuggestions] = useState([]);
 
-  // --- debounce helper
+  // debounce helper
   const debounceRef = useRef({});
   function debounced(key, fn, delay = 400) {
     return (...args) => {
@@ -39,7 +40,6 @@ export default function BookingForm() {
     };
   }
 
-  // --- search function
   async function searchLiq(q) {
     if (!q?.trim()) return [];
     try {
@@ -52,7 +52,6 @@ export default function BookingForm() {
     }
   }
 
-  // --- Debounced searches
   const runPickupSearch = useMemo(
     () =>
       debounced("pickup", async (val) => {
@@ -85,7 +84,6 @@ export default function BookingForm() {
     []
   );
 
-  // --- Pickup & Drop inputs
   function handlePickupInput(e) {
     const val = e.target.value;
     setPickupInput(val);
@@ -111,7 +109,6 @@ export default function BookingForm() {
     setPickupLon(s.lon);
     setPSuggestions([]);
   }
-
   function chooseDrop(s) {
     setDropInput(s.label);
     setDrop(s.label);
@@ -127,7 +124,7 @@ export default function BookingForm() {
     }, 150);
   };
 
-  // --- Set min datetime = now
+  // Set min datetime = now (local)
   useEffect(() => {
     const now = new Date();
     const pad = (n) => String(n).padStart(2, "0");
@@ -137,30 +134,32 @@ export default function BookingForm() {
     setMinDateTime(local);
   }, []);
 
-  // --- Prefill if editing
+  // Prefill when editing
   useEffect(() => {
     if (!bookingId) return;
     fetch(`/api/bookings/${bookingId}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data) {
-          setName(data.name || "");
-          setPhone(data.phone || "");
-          setTripType(data.tripType || "airport_city");
-          setPickupInput(data.pickup || "");
-          setPickup(data.pickup || "");
-          setPickupLat(data.pickupLat || null);
-          setPickupLon(data.pickupLon || null);
-          setDropInput(data.drop || "");
-          setDrop(data.drop || "");
-          setDropLat(data.dropLat || null);
-          setDropLon(data.dropLon || null);
-          setPickupTime(data.pickupTime || ""); // ✅ don’t convert, just use stored local string
-        }
+        if (!data) return;
+        setName(data.name || "");
+        setPhone(data.phone || "");
+        setTripType(data.tripType || "airport_city");
+
+        setPickupInput(data.pickup || "");
+        setPickup(data.pickup || "");
+        setPickupLat(data.pickupLat ?? null);
+        setPickupLon(data.pickupLon ?? null);
+
+        setDropInput(data.drop || "");
+        setDrop(data.drop || "");
+        setDropLat(data.dropLat ?? null);
+        setDropLon(data.dropLon ?? null);
+
+        setPickupTime(data.pickupTime || "");
+        setPassengers(data.passengers ?? 1); // ✅ NEW
       });
   }, [bookingId]);
 
-  // --- Ensure coordinates
   async function ensureCoords() {
     let finalPickupLat = pickupLat;
     let finalPickupLon = pickupLon;
@@ -177,7 +176,6 @@ export default function BookingForm() {
         if (!finalPickupLabel) finalPickupLabel = res[0].label;
       }
     }
-
     if ((!finalDropLat || !finalDropLon) && dropInput) {
       const res = await searchLiq(dropInput);
       if (res?.length) {
@@ -197,7 +195,6 @@ export default function BookingForm() {
     };
   }
 
-  // --- Submit
   async function onSubmit(e) {
     e.preventDefault();
 
@@ -227,7 +224,8 @@ export default function BookingForm() {
         pickupLon: finalPickupLon,
         dropLat: finalDropLat,
         dropLon: finalDropLon,
-        pickupTime, // ✅ raw local datetime string
+        pickupTime,          // keep local string
+        passengers: Number(passengers) || 1, // ✅ include passengers
       };
 
       let res;
@@ -249,7 +247,6 @@ export default function BookingForm() {
       if (!res.ok || !data?.id) {
         throw new Error(data?.error || "Failed to save booking");
       }
-
       window.location.href = `/review?id=${data.id}`;
     } catch (err) {
       alert(err.message || "Something went wrong");
@@ -289,18 +286,32 @@ export default function BookingForm() {
         />
       </div>
 
-      {/* Trip Type */}
-      <select
-        value={tripType}
-        onChange={(e) => setTripType(e.target.value)}
-        className="form-select"
-      >
-        <option value="airport_city">Airport → City</option>
-        <option value="city_airport">City → Airport</option>
-        <option value="outstation">Outstation</option>
-        <option value="rental">Rental</option>
-        <option value="local">Local</option>
-      </select>
+      {/* Trip Type + Passengers */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <select
+          value={tripType}
+          onChange={(e) => setTripType(e.target.value)}
+          className="form-select"
+        >
+          <option value="airport_city">Airport → City</option>
+          <option value="city_airport">City → Airport</option>
+          <option value="outstation">Outstation</option>
+          <option value="rental">Rental</option>
+          <option value="local">Local</option>
+        </select>
+
+        <input
+          type="number"
+          min={1}
+          max={8}
+          step={1}
+          value={passengers}
+          onChange={(e) => setPassengers(e.target.value)}
+          className="form-input"
+          placeholder="Passengers"
+          aria-label="Passengers"
+        />
+      </div>
 
       {/* Pickup */}
       <div className="relative">
@@ -364,7 +375,7 @@ export default function BookingForm() {
         value={pickupTime}
         min={minDateTime}
         step="60"
-        onChange={(e) => setPickupTime(e.target.value)} // ✅ no UTC conversion
+        onChange={(e) => setPickupTime(e.target.value)} // keep local string
         required
         className="form-input"
       />

@@ -44,12 +44,9 @@ function ReviewContent() {
     }
   }
 
-  if (loading)
-    return <p className="text-center p-6">Loading your booking...</p>;
-  if (!booking)
-    return <p className="text-center p-6 text-red-500">Booking not found.</p>;
+  if (loading) return <p className="text-center p-6">Loading your booking...</p>;
+  if (!booking) return <p className="text-center p-6 text-red-500">Booking not found.</p>;
 
-  // ✅ Safe formatting (IST)
   const formattedTime = booking.pickupTime
     ? new Date(booking.pickupTime).toLocaleString("en-IN", {
         timeZone: "Asia/Kolkata",
@@ -64,9 +61,7 @@ function ReviewContent() {
 
   return (
     <div className="max-w-2xl mx-auto mt-10 bg-white p-6 rounded-xl shadow-md space-y-6">
-      <h1 className="text-xl font-bold text-slate-900 text-center">
-        Review Your Booking
-      </h1>
+      <h1 className="text-xl font-bold text-slate-900 text-center">Review Your Booking</h1>
       <div className="space-y-2 text-slate-700">
         <p><strong>Name:</strong> {booking.name}</p>
         <p><strong>Phone:</strong> {booking.phone}</p>
@@ -74,8 +69,10 @@ function ReviewContent() {
         <p><strong>Pickup:</strong> {booking.pickup}</p>
         <p><strong>Drop:</strong> {booking.drop}</p>
         <p><strong>Date & Time:</strong> {formattedTime}</p>
+        <p><strong>Passengers:</strong> {booking.passengers ?? 1}</p>
         <p><strong>Fare:</strong> ₹{booking.fare}</p>
       </div>
+
       <button
         onClick={handlePay}
         disabled={paying}

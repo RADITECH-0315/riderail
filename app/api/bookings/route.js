@@ -6,7 +6,7 @@ import { getDistanceAndDuration } from "../../../lib/distance";
 import { computeFare } from "../../../lib/fare";
 import { geocodeAddress, getFixedCoords } from "../../../lib/location";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../lib/authOptions";  // ✅ fixed import
+import { authOptions } from "../../../lib/authOptions";
 
 // ==================
 // POST /api/bookings -> Create a new booking
@@ -95,13 +95,13 @@ export async function POST(req) {
       phone,
       email,
       tripType,
-      pickup, // ✅ matches schema
+      pickup,
       pickupLat: origin.lat,
       pickupLon: origin.lon,
-      drop, // ✅ matches schema
+      drop,
       dropLat: dest.lat,
       dropLon: dest.lon,
-      pickupTime: new Date(pickupTime),
+      pickupTime, // ✅ keep raw local string
       passengers: passengers || 1,
       vehicleType: vehicleType || "sedan",
       distanceKm,
