@@ -1,9 +1,9 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 
-export default function ReviewPage() {
+function ReviewContent() {
   const searchParams = useSearchParams();
   const bookingId = searchParams.get("id");
 
@@ -11,7 +11,6 @@ export default function ReviewPage() {
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
 
-  // ✅ Fetch booking details
   useEffect(() => {
     if (!bookingId) return;
     fetch(`/api/bookings/${bookingId}`)
@@ -32,46 +31,56 @@ export default function ReviewPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookingId }),
       });
-
       const data = await res.json();
       if (data?.url) {
-        window.location.href = data.url; // ✅ redirect to Stripe Checkout
+        window.location.href = data.url;
       } else {
         alert(data.error || "Payment failed to start.");
       }
-    } catch (err) {
+    } catch {
       alert("Error starting payment");
     } finally {
       setPaying(false);
     }
   }
 
-  if (loading) {
+  if (loading)
     return <p className="text-center p-6">Loading your booking...</p>;
-  }
-
-  if (!booking) {
+  if (!booking)
     return <p className="text-center p-6 text-red-500">Booking not found.</p>;
-  }
 
   return (
     <div className="max-w-2xl mx-auto mt-10 bg-white p-6 rounded-xl shadow-md space-y-6">
       <h1 className="text-xl font-bold text-slate-900 text-center">
         Review Your Booking
       </h1>
-
       <div className="space-y-2 text-slate-700">
-        <p><strong>Name:</strong> {booking.name}</p>
-        <p><strong>Phone:</strong> {booking.phone}</p>
-        <p><strong>Trip Type:</strong> {booking.tripType}</p>
-        <p><strong>Pickup:</strong> {booking.pickup}</p> {/* ✅ schema aligned */}
-        <p><strong>Drop:</strong> {booking.drop}</p>     {/* ✅ schema aligned */}
-        <p><strong>Date & Time:</strong>{" "}
-          {new Date(booking.pickupTime).toLocaleString()}
+        <p>
+          <strong>Name:</strong> {booking.name}
         </p>
-        <p><strong>Fare:</strong> ₹{booking.fare}</p>
+        <p>
+          <strong>Phone:</strong> {booking.phone}
+        </p>
+        <p>
+          <strong>Trip Type:</strong> {booking.tripType}
+        </p>
+        <p>
+          <strong>Pickup:</strong> {booking.pickup}
+        </p>
+        <p>
+          <strong>Drop:</strong> {booking.drop}
+        </p>
+        <p>
+          <strong>Date & Time:</strong>{" "}
+          {new Date(booking.pickupTime).toLocaleString("en-IN", {
+            dateStyle: "medium",
+            timeStyle: "short",
+          })}
+        </p>{" "}
+        <p>
+          <strong>Fare:</strong> ₹{booking.fare}
+        </p>
       </div>
-
       <button
         onClick={handlePay}
         disabled={paying}
@@ -80,5 +89,13 @@ export default function ReviewPage() {
         {paying ? "Redirecting to Payment..." : "Pay Now"}
       </button>
     </div>
+  );
+}
+
+export default function ReviewPage() {
+  return (
+    <Suspense fallback={<p className="text-center p-6">Loading booking...</p>}>
+      <ReviewContent />
+    </Suspense>
   );
 }

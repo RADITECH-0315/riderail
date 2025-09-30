@@ -1,7 +1,7 @@
 // app/api/webhooks/razorpay/route.js
 import crypto from "crypto";
 import { NextResponse } from "next/server";
-import { db, FieldValue } from "@/lib/firebaseAdmin";
+import { db, FieldValue } from "../../../../lib/firebaseAdmin";
 
 /**
  * Razorpay sends JSON and a signature in header: `x-razorpay-signature`

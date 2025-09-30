@@ -42,8 +42,8 @@ export async function POST(req) {
         },
       ],
       mode: "payment",
-      success_url: `${process.env.STRIPE_SUCCESS_URL}?bookingId=${booking._id}`,
-      cancel_url: process.env.STRIPE_CANCEL_URL,
+      success_url: `${process.env.STRIPE_SUCCESS_URL}?bookingId=${booking._id}`, // ✅ include bookingId
+      cancel_url: `${process.env.STRIPE_CANCEL_URL}?bookingId=${booking._id}`,   // ✅ include bookingId
       metadata: {
         bookingId: booking._id.toString(),
       },

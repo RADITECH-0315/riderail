@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import Booking from "@/models/booking";
+import { connectDB } from "../../../../../lib/db";
+import Booking from "../../../../../models/booking";
+
 
 export async function POST(req, { params }) {
   try {

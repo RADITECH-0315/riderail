@@ -143,19 +143,15 @@ export default function BookingForm() {
           setName(data.name || "");
           setPhone(data.phone || "");
           setTripType(data.tripType || "airport_city");
-          setPickupInput(data.pickup || "");   // ✅ schema aligned
+          setPickupInput(data.pickup || ""); // ✅ schema aligned
           setPickup(data.pickup || "");
           setPickupLat(data.pickupLat || null);
           setPickupLon(data.pickupLon || null);
-          setDropInput(data.drop || "");       // ✅ schema aligned
+          setDropInput(data.drop || ""); // ✅ schema aligned
           setDrop(data.drop || "");
           setDropLat(data.dropLat || null);
           setDropLon(data.dropLon || null);
-          setPickupTime(
-            data.pickupTime
-              ? new Date(data.pickupTime).toISOString().slice(0, 16)
-              : ""
-          );
+          setPickupTime(data.pickupTime || "");
         }
       });
   }, [bookingId]);
@@ -220,7 +216,7 @@ export default function BookingForm() {
         phone,
         tripType,
         pickup: finalPickupLabel, // ✅ schema aligned
-        drop: finalDropLabel,     // ✅ schema aligned
+        drop: finalDropLabel, // ✅ schema aligned
         pickupLat: finalPickupLat,
         pickupLon: finalPickupLon,
         dropLat: finalDropLat,
@@ -359,10 +355,16 @@ export default function BookingForm() {
       {/* Pickup Time */}
       <input
         type="datetime-local"
-        value={pickupTime}
+        value={
+          pickupTime ? new Date(pickupTime).toISOString().slice(0, 16) : ""
+        }
         min={minDateTime}
         step="60"
-        onChange={(e) => setPickupTime(e.target.value)}
+        onChange={(e) => {
+          const localValue = e.target.value; // "2025-10-31T14:30"
+          const isoString = new Date(localValue).toISOString();
+          setPickupTime(isoString); // ✅ always store ISO
+        }}
         required
         className="form-input"
       />

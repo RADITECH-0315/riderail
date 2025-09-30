@@ -6,7 +6,7 @@ import { getDistanceAndDuration } from "../../../lib/distance";
 import { computeFare } from "../../../lib/fare";
 import { geocodeAddress, getFixedCoords } from "../../../lib/location";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { authOptions } from "../../../lib/authOptions";  // ✅ fixed import
 
 // ==================
 // POST /api/bookings -> Create a new booking
