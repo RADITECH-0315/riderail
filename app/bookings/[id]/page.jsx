@@ -1,18 +1,11 @@
-// /app/bookings/[id]/page.jsx
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../lib/authOptions";
 import { redirect } from "next/navigation";
 import { connectDB } from "../../../lib/db";
 import Booking from "../../../models/booking";
-import CancelRideButton from "./CancelRideButton"; // ✅ client component
+import CancelRideButton from "./CancelRideButton";
 
-// ✅ Server Action must be exported at top level
-export async function cancelRideAction(id) {
-  "use server"; // ✅ marks this as server action
-  await connectDB();
-  await Booking.findByIdAndUpdate(id, { status: "cancelled" });
-  redirect("/bookings"); // after cancel, go back to bookings list
-}
+// ❌ Do NOT export any extra functions from this page file.
 
 export default async function BookingDetails({ params }) {
   const session = await getServerSession(authOptions);
@@ -26,8 +19,8 @@ export default async function BookingDetails({ params }) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow">
-      <h1 className="text-2xl font-semibold mb-4">Ride Details</h1>
+    <div className="mx-auto max-w-2xl rounded-lg bg-white p-6 shadow">
+      <h1 className="mb-4 text-2xl font-semibold">Ride Details</h1>
 
       <div className="space-y-3 text-gray-800">
         <p><strong>Pickup:</strong> {booking.pickup}</p>
@@ -47,7 +40,7 @@ export default async function BookingDetails({ params }) {
       </div>
 
       {booking.status !== "cancelled" && (
-        <CancelRideButton bookingId={params.id} cancelRideAction={cancelRideAction} />
+        <CancelRideButton bookingId={params.id} />
       )}
     </div>
   );
