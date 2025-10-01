@@ -6,11 +6,21 @@ import { getDistanceAndDuration } from "../../../lib/distance";
 import { computeFare } from "../../../lib/fare";
 import { geocodeAddress, getFixedCoords } from "../../../lib/location";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../../lib/authOptions"; // if you have auth; safe if not logged in
+import { authOptions } from "../../../lib/authOptions";
 
-// POST /api/bookings  -> Create booking
+// POST /api/bookings -> Create booking
 export async function POST(req) {
   try {
+    const session = await getServerSession(authOptions);
+
+    // ✅ Enforce login
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "You must be logged in to book a ride." },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
     const {
       name,
@@ -19,7 +29,7 @@ export async function POST(req) {
       tripType,
       pickup,
       drop,
-      pickupTime,   // "YYYY-MM-DDTHH:mm" local string (from <input type="datetime-local" />)
+      pickupTime,
       pickupLat,
       pickupLon,
       dropLat,
@@ -32,7 +42,7 @@ export async function POST(req) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Resolve origin coords
+    // ✅ Coordinates
     let origin = getFixedCoords(pickup);
     if (!origin) {
       if (Number.isFinite(pickupLat) && Number.isFinite(pickupLon)) {
@@ -41,8 +51,6 @@ export async function POST(req) {
         origin = await geocodeAddress(pickup);
       }
     }
-
-    // Resolve destination coords
     let dest = getFixedCoords(drop);
     if (!dest) {
       if (Number.isFinite(dropLat) && Number.isFinite(dropLon)) {
@@ -51,32 +59,21 @@ export async function POST(req) {
         dest = await geocodeAddress(drop);
       }
     }
-
     if (!origin?.lat || !origin?.lon || !dest?.lat || !dest?.lon) {
       return NextResponse.json({ error: "Invalid locations" }, { status: 400 });
     }
 
-    // Distance + Duration
+    // ✅ Distance + Fare
     const { distanceKm, durationMin, mode } = await getDistanceAndDuration(origin, dest);
-    if (!Number.isFinite(distanceKm) || !Number.isFinite(durationMin)) {
-      return NextResponse.json({ error: "Distance calculation failed" }, { status: 502 });
-    }
-
-    // Fare
     const { fare, currency } = computeFare({ tripType, distanceKm, durationMin });
+
     if (!Number.isFinite(fare)) {
       return NextResponse.json({ error: "Fare calculation failed" }, { status: 502 });
     }
 
     await connectDB();
 
-    // Optional session
-    let userId = null;
-    try {
-      const session = await getServerSession(authOptions);
-      userId = session?.user?.id || null;
-    } catch (_) {}
-
+    // ✅ Create booking with userId
     const doc = await Booking.create({
       name,
       phone,
@@ -88,7 +85,7 @@ export async function POST(req) {
       drop,
       dropLat: dest.lat,
       dropLon: dest.lon,
-      pickupTime,                 // keep LOCAL STRING
+      pickupTime, // local string
       passengers: passengers ?? 1,
       vehicleType: vehicleType || "sedan",
       distanceKm,
@@ -97,7 +94,7 @@ export async function POST(req) {
       currency,
       paymentStatus: "created",
       meta: { distanceSource: mode || "unknown" },
-      userId,
+      userId: session.user.id,
     });
 
     return NextResponse.json({ ok: true, id: String(doc._id) });
@@ -107,7 +104,7 @@ export async function POST(req) {
   }
 }
 
-// GET /api/bookings  -> List bookings (admin/list use)
+// GET /api/bookings -> List all bookings (admin)
 export async function GET() {
   try {
     await connectDB();

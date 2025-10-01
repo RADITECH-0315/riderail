@@ -14,7 +14,7 @@
 }
 html{ scroll-behavior:smooth; }
 html,body{ @apply bg-[var(--bg)] text-[var(--text)]; }
-body{ overflow-x:hidden; } /* no side whitespace */
+body{ overflow-x:hidden; }
 
 /* Container & surfaces */
 .container{ @apply mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8; }
@@ -46,6 +46,13 @@ body{ overflow-x:hidden; } /* no side whitespace */
   box-shadow: 0 8px 20px rgba(244,180,0,.35);
 }
 .btn-cta:hover{ filter: brightness(0.98); transform: translateY(-1px); }
+.btn-ghost{ @apply px-4 py-2 rounded-lg hover:bg-slate-100; }
+.btn-outline{
+  @apply rounded-xl px-5 py-3 border border-slate-300 bg-white hover:bg-slate-50;
+}
+
+/* Nav links */
+.nav-link{ @apply hover:text-[var(--brand)] transition; }
 
 /* Form */
 .form-label{ @apply block text-sm font-medium text-slate-600 mb-1; }
@@ -65,11 +72,6 @@ body{ overflow-x:hidden; } /* no side whitespace */
 .hover\:lift:hover{ transform: translateY(-4px); box-shadow: 0 18px 40px rgba(2,6,23,.12); }
 
 /* Testimonials avatar placeholder */
-.avatar{
-  width:54px; height:54px; border-radius:9999px; margin:0 auto;
+.avatar{ width:54px; height:54px; border-radius:9999px; margin:0 auto;
   background: linear-gradient(135deg,#f4b400,#ffce32);
 }
-
-/* Reveal animation */
-.reveal{ animation:reveal .6s ease-out both; }
-@keyframes reveal{ from{ opacity:0; transform:translateY(10px);} to{ opacity:1; transform:none;} }

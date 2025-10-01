@@ -2,36 +2,36 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 export default function BookingForm() {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const bookingId = searchParams.get("id");
 
+  // ---------------- STATE ----------------
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [tripType, setTripType] = useState("airport_city");
-
   const [pickupInput, setPickupInput] = useState("");
   const [pickup, setPickup] = useState("");
   const [pickupLat, setPickupLat] = useState(null);
   const [pickupLon, setPickupLon] = useState(null);
-
   const [dropInput, setDropInput] = useState("");
   const [drop, setDrop] = useState("");
   const [dropLat, setDropLat] = useState(null);
   const [dropLon, setDropLon] = useState(null);
-
-  // ✅ keep local string like "YYYY-MM-DDTHH:mm"
   const [pickupTime, setPickupTime] = useState("");
   const [minDateTime, setMinDateTime] = useState("");
-  const [passengers, setPassengers] = useState(1); // ✅ NEW
+  const [passengers, setPassengers] = useState(1);
   const [loading, setLoading] = useState(false);
 
   const [pSuggestions, setPSuggestions] = useState([]);
   const [dSuggestions, setDSuggestions] = useState([]);
-
-  // debounce helper
   const debounceRef = useRef({});
+
+  // ---------------- HELPERS ----------------
   function debounced(key, fn, delay = 400) {
     return (...args) => {
       const prev = debounceRef.current[key];
@@ -84,6 +84,7 @@ export default function BookingForm() {
     []
   );
 
+  // ---------------- INPUT HANDLERS ----------------
   function handlePickupInput(e) {
     const val = e.target.value;
     setPickupInput(val);
@@ -92,7 +93,6 @@ export default function BookingForm() {
     setPickupLon(null);
     runPickupSearch(val);
   }
-
   function handleDropInput(e) {
     const val = e.target.value;
     setDropInput(val);
@@ -101,7 +101,6 @@ export default function BookingForm() {
     setDropLon(null);
     runDropSearch(val);
   }
-
   function choosePickup(s) {
     setPickupInput(s.label);
     setPickup(s.label);
@@ -116,7 +115,6 @@ export default function BookingForm() {
     setDropLon(s.lon);
     setDSuggestions([]);
   }
-
   const closeSuggestionsSoon = (which) => {
     setTimeout(() => {
       if (which === "p") setPSuggestions([]);
@@ -124,7 +122,7 @@ export default function BookingForm() {
     }, 150);
   };
 
-  // Set min datetime = now (local)
+  // ---------------- EFFECTS ----------------
   useEffect(() => {
     const now = new Date();
     const pad = (n) => String(n).padStart(2, "0");
@@ -134,7 +132,6 @@ export default function BookingForm() {
     setMinDateTime(local);
   }, []);
 
-  // Prefill when editing
   useEffect(() => {
     if (!bookingId) return;
     fetch(`/api/bookings/${bookingId}`)
@@ -144,22 +141,20 @@ export default function BookingForm() {
         setName(data.name || "");
         setPhone(data.phone || "");
         setTripType(data.tripType || "airport_city");
-
         setPickupInput(data.pickup || "");
         setPickup(data.pickup || "");
         setPickupLat(data.pickupLat ?? null);
         setPickupLon(data.pickupLon ?? null);
-
         setDropInput(data.drop || "");
         setDrop(data.drop || "");
         setDropLat(data.dropLat ?? null);
         setDropLon(data.dropLon ?? null);
-
         setPickupTime(data.pickupTime || "");
-        setPassengers(data.passengers ?? 1); // ✅ NEW
+        setPassengers(data.passengers ?? 1);
       });
   }, [bookingId]);
 
+  // ---------------- COORD RESOLUTION ----------------
   async function ensureCoords() {
     let finalPickupLat = pickupLat;
     let finalPickupLon = pickupLon;
@@ -195,8 +190,15 @@ export default function BookingForm() {
     };
   }
 
+  // ---------------- SUBMIT ----------------
   async function onSubmit(e) {
     e.preventDefault();
+
+    // require login
+    if (!session?.user) {
+      window.location.href = "/login";
+      return;
+    }
 
     const {
       finalPickupLat,
@@ -224,8 +226,8 @@ export default function BookingForm() {
         pickupLon: finalPickupLon,
         dropLat: finalDropLat,
         dropLon: finalDropLon,
-        pickupTime,          // keep local string
-        passengers: Number(passengers) || 1, // ✅ include passengers
+        pickupTime,
+        passengers: Number(passengers) || 1,
       };
 
       let res;
@@ -255,6 +257,40 @@ export default function BookingForm() {
     }
   }
 
+  // ---------------- LOGGED-OUT VIEW ----------------
+  if (!session?.user) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 text-center shadow-xl">
+        <h3 className="text-lg sm:text-xl font-semibold text-[var(--ink)]">
+          Start your booking
+        </h3>
+        <p className="mt-1 text-slate-600">
+          Please sign in or create an account to continue.
+        </p>
+
+        <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link
+            href="/login"
+            className="btn btn-primary w-full sm:w-auto"
+          >
+            Login
+          </Link>
+          <Link
+            href="/register"
+            className="btn btn-outline w-full sm:w-auto"
+          >
+            Create account
+          </Link>
+        </div>
+
+        <p className="mt-3 text-xs text-slate-500">
+          You’ll be able to review and manage your rides after signing in.
+        </p>
+      </div>
+    );
+  }
+
+  // ---------------- BOOKING FORM ----------------
   return (
     <form
       onSubmit={onSubmit}
@@ -375,7 +411,7 @@ export default function BookingForm() {
         value={pickupTime}
         min={minDateTime}
         step="60"
-        onChange={(e) => setPickupTime(e.target.value)} // keep local string
+        onChange={(e) => setPickupTime(e.target.value)}
         required
         className="form-input"
       />

@@ -4,17 +4,31 @@ import { getToken } from "next-auth/jwt";
 
 export async function middleware(req) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  const isAdmin = token?.role === "admin";
+  const { pathname } = req.nextUrl;
   const url = req.nextUrl.clone();
 
-  // Allow /admin/login without forcing redirect
-  if (req.nextUrl.pathname === "/admin/login") {
+  // ✅ Allow NextAuth routes, static assets, homepage
+  if (
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/static") ||
+    pathname === "/"
+  ) {
     return NextResponse.next();
   }
 
-  if (req.nextUrl.pathname.startsWith("/admin")) {
-    if (!isAdmin) {
-      url.pathname = "/admin/login";
+  // ✅ Protect admin routes
+  if (pathname.startsWith("/admin")) {
+    if (!token || token.role !== "admin") {
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // ✅ Protect customer routes
+  if (pathname.startsWith("/bookings") || pathname.startsWith("/profile")) {
+    if (!token || token.role !== "customer") {
+      url.pathname = "/login";
       return NextResponse.redirect(url);
     }
   }
@@ -23,5 +37,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/bookings/:path*", "/profile/:path*"],
 };
