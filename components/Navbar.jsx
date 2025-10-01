@@ -1,4 +1,3 @@
-// /components/Navbar.jsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -32,7 +31,7 @@ export default function Navbar() {
     return () => sections.forEach((sec) => observer.unobserve(sec));
   }, []);
 
-  // Helper to style active link
+  // Desktop link
   function navLink(id, label) {
     return (
       <a
@@ -42,6 +41,23 @@ export default function Navbar() {
           active === id
             ? "text-[var(--brand)] font-semibold"
             : "text-slate-700 hover:text-[var(--brand)]"
+        }`}
+      >
+        {label}
+      </a>
+    );
+  }
+
+  // Mobile link
+  function mobileLink(id, label) {
+    return (
+      <a
+        href={`/#${id}`}
+        onClick={closeMenu}
+        className={`block w-full rounded-lg px-3 py-2 transition ${
+          active === id
+            ? "bg-slate-100 text-[var(--brand)] font-semibold"
+            : "text-slate-800 hover:bg-slate-100"
         }`}
       >
         {label}
@@ -132,18 +148,18 @@ export default function Navbar() {
           open ? "max-h-96" : "max-h-0"
         }`}
       >
-        <div className="px-4 py-3 space-y-2 bg-white">
-          {navLink("book", "Book")}
-          {navLink("how", "How it works")}
-          {navLink("reviews", "Reviews")}
-          {navLink("contact", "Contact")}
+        <div className="px-4 py-3 space-y-2 bg-white flex flex-col">
+          {mobileLink("book", "Book")}
+          {mobileLink("how", "How it works")}
+          {mobileLink("reviews", "Reviews")}
+          {mobileLink("contact", "Contact")}
 
           {session?.user ? (
             <>
               <Link
                 href="/bookings"
                 onClick={closeMenu}
-                className="block py-2 text-slate-800"
+                className="block w-full rounded-lg px-3 py-2 text-slate-800 hover:bg-slate-100"
               >
                 My rides
               </Link>
@@ -152,24 +168,24 @@ export default function Navbar() {
                   closeMenu();
                   signOut({ callbackUrl: "/" });
                 }}
-                className="w-full rounded-xl border border-slate-300 py-2 font-medium text-slate-800"
+                className="w-full rounded-lg border border-slate-300 py-2 font-medium text-slate-800 hover:bg-slate-100"
               >
                 Logout
               </button>
             </>
           ) : (
-            <div className="flex gap-3 pt-2">
+            <div className="flex flex-col gap-2 pt-2">
               <Link
                 href="/login"
                 onClick={closeMenu}
-                className="flex-1 rounded-xl border border-slate-300 py-2 text-center font-medium text-slate-800"
+                className="w-full rounded-lg border border-slate-300 py-2 text-center font-medium text-slate-800 hover:bg-slate-100"
               >
                 Login
               </Link>
               <Link
                 href="/register"
                 onClick={closeMenu}
-                className="flex-1 btn btn-primary justify-center"
+                className="w-full btn btn-primary justify-center"
               >
                 Sign up
               </Link>
