@@ -1,15 +1,28 @@
 // /app/login/page.jsx
 "use client";
 
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { data: session } = useSession();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  // ✅ Auto-redirect when session is loaded
+  useEffect(() => {
+    if (session?.user?.role === "admin") {
+      router.push("/admin/dashboard");
+    } else if (session?.user?.role === "customer") {
+      router.push("/#book");
+    }
+  }, [session, router]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -21,33 +34,19 @@ export default function LoginPage() {
     }
 
     setBusy(true);
-
     try {
-      // Try login
       const res = await signIn("credentials", {
         email: email.trim(),
         password: password.trim(),
-        redirect: false,
+        redirect: false, // 🚨 no auto redirect, we handle manually
       });
 
       if (res?.error) {
         setError("Invalid email or password.");
-        setBusy(false);
-        return;
-      }
-
-      // Check session to know if user is admin or customer
-      const sessionRes = await fetch("/api/auth/session");
-      const session = await sessionRes.json();
-
-      if (session?.user?.role === "admin") {
-        window.location.href = "/admin/dashboard";
-      } else {
-        window.location.href = "/#book";
       }
     } catch (err) {
-      setError("Something went wrong. Please try again.");
       console.error(err);
+      setError("Something went wrong. Please try again.");
     } finally {
       setBusy(false);
     }

@@ -1,3 +1,4 @@
+// app/bookings/page.jsx
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../lib/authOptions";
 import { redirect } from "next/navigation";

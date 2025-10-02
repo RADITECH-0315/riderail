@@ -1,3 +1,4 @@
+// app/admin/dashboard/page.jsx
 "use client";
 
 import useSWR from "swr";

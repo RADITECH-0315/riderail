@@ -1,4 +1,4 @@
-// middleware.js
+// /middleware.js
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
@@ -7,35 +7,53 @@ export async function middleware(req) {
   const { pathname } = req.nextUrl;
   const url = req.nextUrl.clone();
 
-  // ✅ Allow NextAuth routes, static assets, homepage
-  if (
-    pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/static") ||
-    pathname === "/"
-  ) {
+  // ✅ Publicly accessible routes (skip checks)
+  const publicPaths = [
+    "/",
+    "/login",
+    "/register",
+    "/api/auth",
+    "/_next",
+    "/static",
+    "/favicon.ico",
+  ];
+
+  if (publicPaths.some((path) => pathname.startsWith(path))) {
     return NextResponse.next();
   }
 
-  // ✅ Protect admin routes
-  if (pathname.startsWith("/admin")) {
-    if (!token || token.role !== "admin") {
-      url.pathname = "/login";
-      return NextResponse.redirect(url);
-    }
+  // ✅ If no token → force login
+  if (!token) {
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
   }
 
-  // ✅ Protect customer routes
-  if (pathname.startsWith("/bookings") || pathname.startsWith("/profile")) {
-    if (!token || token.role !== "customer") {
-      url.pathname = "/login";
-      return NextResponse.redirect(url);
-    }
+  // ✅ Role-based route enforcement
+  if (pathname.startsWith("/admin") && token.role !== "admin") {
+    url.pathname = "/";
+    return NextResponse.redirect(url);
+  }
+
+  if (
+    (pathname.startsWith("/bookings") || pathname.startsWith("/profile")) &&
+    token.role !== "customer"
+  ) {
+    url.pathname = "/";
+    return NextResponse.redirect(url);
+  }
+
+  // ✅ Catch-all fallback: if role not matched, deny access
+  if (!["admin", "customer"].includes(token.role)) {
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
 }
 
+// ✅ Apply to ALL routes except clearly public ones
 export const config = {
-  matcher: ["/admin/:path*", "/bookings/:path*", "/profile/:path*"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|api/auth|login|register).*)",
+  ],
 };

@@ -1,3 +1,4 @@
+// app/admin/payments/page.jsx
 "use client";
 
 import useSWR from "swr";
