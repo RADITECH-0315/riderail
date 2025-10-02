@@ -1,4 +1,3 @@
-// /app/review/page.jsx
 "use client";
 
 import { useSearchParams } from "next/navigation";
@@ -17,7 +16,9 @@ function ReviewContent() {
     fetch(`/api/bookings/${bookingId}`)
       .then((res) => res.json())
       .then((data) => {
-        setBooking(data);
+        if (!data.error) {
+          setBooking(data);   // ✅ data is already flat
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -46,7 +47,7 @@ function ReviewContent() {
   }
 
   if (loading) return <p className="text-center p-6">Loading your booking...</p>;
-  if (!booking) return <p className="text-center p-6 text-red-500">Booking not found.</p>;
+  if (!booking) return <p className="text-center p-6 text-red-500">❌ Booking not found.</p>;
 
   const formattedTime = booking.pickupTime
     ? new Date(booking.pickupTime).toLocaleString("en-IN", {
@@ -62,16 +63,21 @@ function ReviewContent() {
 
   return (
     <div className="max-w-2xl mx-auto mt-10 bg-white p-6 rounded-xl shadow-md space-y-6">
-      <h1 className="text-xl font-bold text-slate-900 text-center">Review Your Booking</h1>
+      <h1 className="text-xl font-bold text-slate-900 text-center">
+        Review Your Booking
+      </h1>
       <div className="space-y-2 text-slate-700">
-        <p><strong>Name:</strong> {booking.name}</p>
-        <p><strong>Phone:</strong> {booking.phone}</p>
-        <p><strong>Trip Type:</strong> {booking.tripType}</p>
-        <p><strong>Pickup:</strong> {booking.pickup}</p>
-        <p><strong>Drop:</strong> {booking.drop}</p>
+        <p><strong>Name:</strong> {booking.name || "Not Provided"}</p>
+        <p><strong>Phone:</strong> {booking.phone || "Not Provided"}</p>
+        <p>
+          <strong>Trip Type:</strong>{" "}
+          {booking.tripType ? booking.tripType.replace("_", " ") : "Not Provided"}
+        </p>
+        <p><strong>Pickup:</strong> {booking.pickup || "Not Provided"}</p>
+        <p><strong>Drop:</strong> {booking.drop || "Not Provided"}</p>
         <p><strong>Date & Time:</strong> {formattedTime}</p>
         <p><strong>Passengers:</strong> {booking.passengers ?? 1}</p>
-        <p><strong>Fare:</strong> ₹{booking.fare}</p>
+        <p><strong>Fare:</strong> ₹{booking.fare ?? "0"}</p>
       </div>
 
       <button

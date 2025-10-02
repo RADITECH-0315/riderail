@@ -1,11 +1,11 @@
-// /models/booking.js
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 /**
- * NOTE:
+ * Booking Schema
  * - pickupTime stored as string "YYYY-MM-DDTHH:mm" (local time)
  * - passengers included
+ * - professional payment + ride status handling
  */
 const BookingSchema = new Schema(
   {
@@ -15,7 +15,14 @@ const BookingSchema = new Schema(
 
     tripType: {
       type: String,
-      enum: ["airport_city", "city_airport", "city_city", "outstation", "rental", "local"],
+      enum: [
+        "airport_city",
+        "city_airport",
+        "city_city",
+        "outstation",
+        "rental",
+        "local",
+      ],
       required: true,
     },
 
@@ -30,21 +37,32 @@ const BookingSchema = new Schema(
     pickupTime: { type: String, required: true }, // stored as local string
 
     passengers: { type: Number, default: 1, min: 1 },
-    vehicleType: { type: String, enum: ["sedan", "suv", "premium"], default: "sedan" },
+    vehicleType: {
+      type: String,
+      enum: ["sedan", "suv", "premium"],
+      default: "sedan",
+    },
 
     distanceKm: Number,
     durationMin: Number,
     fare: Number,
     currency: { type: String, default: "INR" },
 
+    // Ride status
     status: {
       type: String,
       enum: ["pending", "confirmed", "assigned", "completed", "cancelled"],
       default: "pending",
     },
 
+    // Payment status
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "failed"],
+      default: "pending",   // ✅ always start as pending
+    },
+
     paymentOrderId: String,
-    paymentStatus: { type: String, enum: ["created", "paid", "failed"], default: "created" },
     upiTransactionId: String,
     stripeSessionId: String,
     stripePaymentIntentId: String,
@@ -62,4 +80,5 @@ const BookingSchema = new Schema(
   { timestamps: true }
 );
 
-export default mongoose.models.Booking || mongoose.model("Booking", BookingSchema);
+export default mongoose.models.Booking ||
+  mongoose.model("Booking", BookingSchema);

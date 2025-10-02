@@ -1,51 +1,62 @@
-// /app/api/stripe/webhook/route.js
 import { headers } from "next/headers";
-import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { connectDB } from "../../../../lib/db";
 import Booking from "../../../../models/booking";
 
-export const runtime = "nodejs"; // ensure Node runtime for crypto
+export const runtime = "nodejs";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET; // set in Vercel
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2024-06-20",
+});
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export async function POST(req) {
-  const buf = await req.arrayBuffer();
-  const sig = headers().get("stripe-signature");
-
   let event;
   try {
+    const buf = await req.arrayBuffer();
+    const sig = headers().get("stripe-signature");
     event = stripe.webhooks.constructEvent(Buffer.from(buf), sig, endpointSecret);
+    console.log("✅ Webhook received:", event.type);
   } catch (err) {
-    console.error("Webhook signature verification failed.", err.message);
-    return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
+    console.error("❌ [Stripe Webhook] Signature verification failed:", err.message);
+    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
   try {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
-
       const bookingId = session.metadata?.bookingId;
-      if (!bookingId) return NextResponse.json({ ok: true });
+
+      if (!bookingId) {
+        console.warn("⚠️ [Stripe Webhook] Missing bookingId in metadata!");
+        return new Response("Missing bookingId", { status: 400 });
+      }
 
       await connectDB();
       const booking = await Booking.findById(bookingId);
-      if (!booking) return NextResponse.json({ ok: true }); // ignore if missing
 
-      // mark as paid + assign invoice id
+      if (!booking) {
+        console.warn("⚠️ [Stripe Webhook] Booking not found:", bookingId);
+        return new Response("Booking not found", { status: 404 });
+      }
+
       booking.paymentStatus = "paid";
       booking.status = "confirmed";
       booking.stripePaymentIntentId = session.payment_intent || "";
+
       if (!booking.invoiceId) {
         booking.invoiceId = `INV-${String(booking._id).slice(-6).toUpperCase()}`;
       }
+
       await booking.save();
+      console.log("✅ [Stripe Webhook] Booking confirmed:", bookingId);
+    } else {
+      console.log(`ℹ️ [Stripe Webhook] Ignored event type: ${event.type}`);
     }
 
-    return NextResponse.json({ received: true });
+    return new Response("ok", { status: 200 });
   } catch (err) {
-    console.error("Webhook handler error:", err);
-    return NextResponse.json({ error: "Webhook error" }, { status: 500 });
+    console.error("❌ [Stripe Webhook] Handler error:", err);
+    return new Response("Webhook handler error", { status: 500 });
   }
 }

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import LocationInput from "./LocationInput"; // ✅ new component
 
 export default function BookingForm() {
   const { data: session } = useSession();
@@ -14,113 +15,19 @@ export default function BookingForm() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [tripType, setTripType] = useState("airport_city");
-  const [pickupInput, setPickupInput] = useState("");
+
   const [pickup, setPickup] = useState("");
   const [pickupLat, setPickupLat] = useState(null);
   const [pickupLon, setPickupLon] = useState(null);
-  const [dropInput, setDropInput] = useState("");
+
   const [drop, setDrop] = useState("");
   const [dropLat, setDropLat] = useState(null);
   const [dropLon, setDropLon] = useState(null);
+
   const [pickupTime, setPickupTime] = useState("");
   const [minDateTime, setMinDateTime] = useState("");
   const [passengers, setPassengers] = useState(1);
   const [loading, setLoading] = useState(false);
-
-  const [pSuggestions, setPSuggestions] = useState([]);
-  const [dSuggestions, setDSuggestions] = useState([]);
-  const debounceRef = useRef({});
-
-  // ---------------- HELPERS ----------------
-  function debounced(key, fn, delay = 400) {
-    return (...args) => {
-      const prev = debounceRef.current[key];
-      if (prev) clearTimeout(prev);
-      debounceRef.current[key] = setTimeout(() => fn(...args), delay);
-    };
-  }
-
-  async function searchLiq(q) {
-    if (!q?.trim()) return [];
-    try {
-      const res = await fetch(`/api/places?q=${encodeURIComponent(q)}`);
-      if (!res.ok) return [];
-      const data = await res.json();
-      return data.suggestions || [];
-    } catch {
-      return [];
-    }
-  }
-
-  const runPickupSearch = useMemo(
-    () =>
-      debounced("pickup", async (val) => {
-        if (val.length < 3) return setPSuggestions([]);
-        const data = await searchLiq(val);
-        setPSuggestions(
-          (data || []).map((d) => ({
-            label: d.label || d.address || d.display_name,
-            lat: Number(d.lat),
-            lon: Number(d.lng ?? d.lon),
-          }))
-        );
-      }),
-    []
-  );
-
-  const runDropSearch = useMemo(
-    () =>
-      debounced("drop", async (val) => {
-        if (val.length < 3) return setDSuggestions([]);
-        const data = await searchLiq(val);
-        setDSuggestions(
-          (data || []).map((d) => ({
-            label: d.label || d.address || d.display_name,
-            lat: Number(d.lat),
-            lon: Number(d.lng ?? d.lon),
-          }))
-        );
-      }),
-    []
-  );
-
-  // ---------------- INPUT HANDLERS ----------------
-  function handlePickupInput(e) {
-    const val = e.target.value;
-    setPickupInput(val);
-    setPickup("");
-    setPickupLat(null);
-    setPickupLon(null);
-    runPickupSearch(val);
-  }
-  function handleDropInput(e) {
-    const val = e.target.value;
-    setDropInput(val);
-    setDrop("");
-    setDropLat(null);
-    setDropLon(null);
-    runDropSearch(val);
-  }
-  function choosePickup(s) {
-    setPickupInput(s.label);
-    setPickup(s.label);
-    setPickupLat(s.lat);
-    setPickupLon(s.lon);
-    setPSuggestions([]);
-  }
-  function chooseDrop(s) {
-    setDropInput(s.label);
-    setDrop(s.label);
-    setDropLat(s.lat);
-    setDropLon(s.lon);
-    setDSuggestions([]);
-  }
-  const closeSuggestionsSoon = (which) => {
-    setTimeout(() => {
-      if (which === "p") setPSuggestions([]);
-      else setDSuggestions([]);
-    }, 150);
-  };
 
   // ---------------- EFFECTS ----------------
   useEffect(() => {
@@ -141,11 +48,9 @@ export default function BookingForm() {
         setName(data.name || "");
         setPhone(data.phone || "");
         setTripType(data.tripType || "airport_city");
-        setPickupInput(data.pickup || "");
         setPickup(data.pickup || "");
         setPickupLat(data.pickupLat ?? null);
         setPickupLon(data.pickupLon ?? null);
-        setDropInput(data.drop || "");
         setDrop(data.drop || "");
         setDropLat(data.dropLat ?? null);
         setDropLon(data.dropLon ?? null);
@@ -154,62 +59,16 @@ export default function BookingForm() {
       });
   }, [bookingId]);
 
-  // ---------------- COORD RESOLUTION ----------------
-  async function ensureCoords() {
-    let finalPickupLat = pickupLat;
-    let finalPickupLon = pickupLon;
-    let finalDropLat = dropLat;
-    let finalDropLon = dropLon;
-    let finalPickupLabel = pickup || pickupInput;
-    let finalDropLabel = drop || dropInput;
-
-    if ((!finalPickupLat || !finalPickupLon) && pickupInput) {
-      const res = await searchLiq(pickupInput);
-      if (res?.length) {
-        finalPickupLat = Number(res[0].lat);
-        finalPickupLon = Number(res[0].lon);
-        if (!finalPickupLabel) finalPickupLabel = res[0].label;
-      }
-    }
-    if ((!finalDropLat || !finalDropLon) && dropInput) {
-      const res = await searchLiq(dropInput);
-      if (res?.length) {
-        finalDropLat = Number(res[0].lat);
-        finalDropLon = Number(res[0].lon);
-        if (!finalDropLabel) finalDropLabel = res[0].label;
-      }
-    }
-
-    return {
-      finalPickupLat,
-      finalPickupLon,
-      finalDropLat,
-      finalDropLon,
-      finalPickupLabel,
-      finalDropLabel,
-    };
-  }
-
   // ---------------- SUBMIT ----------------
   async function onSubmit(e) {
     e.preventDefault();
 
-    // require login
     if (!session?.user) {
       window.location.href = "/login";
       return;
     }
 
-    const {
-      finalPickupLat,
-      finalPickupLon,
-      finalDropLat,
-      finalDropLon,
-      finalPickupLabel,
-      finalDropLabel,
-    } = await ensureCoords();
-
-    if (!finalPickupLat || !finalPickupLon || !finalDropLat || !finalDropLon) {
+    if (!pickupLat || !pickupLon || !dropLat || !dropLon) {
       alert("Please select valid pickup & drop locations.");
       return;
     }
@@ -220,12 +79,12 @@ export default function BookingForm() {
         name,
         phone,
         tripType,
-        pickup: finalPickupLabel,
-        drop: finalDropLabel,
-        pickupLat: finalPickupLat,
-        pickupLon: finalPickupLon,
-        dropLat: finalDropLat,
-        dropLon: finalDropLon,
+        pickup,
+        drop,
+        pickupLat,
+        pickupLon,
+        dropLat,
+        dropLon,
         pickupTime,
         passengers: Number(passengers) || 1,
       };
@@ -269,16 +128,10 @@ export default function BookingForm() {
         </p>
 
         <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link
-            href="/login"
-            className="btn btn-primary w-full sm:w-auto"
-          >
+          <Link href="/login" className="btn btn-primary w-full sm:w-auto">
             Login
           </Link>
-          <Link
-            href="/register"
-            className="btn btn-outline w-full sm:w-auto"
-          >
+          <Link href="/register" className="btn btn-outline w-full sm:w-auto">
             Create account
           </Link>
         </div>
@@ -350,60 +203,24 @@ export default function BookingForm() {
       </div>
 
       {/* Pickup */}
-      <div className="relative">
-        <input
-          type="text"
-          placeholder="Pickup location"
-          value={pickupInput}
-          onChange={handlePickupInput}
-          onFocus={() => runPickupSearch(pickupInput)}
-          onBlur={() => closeSuggestionsSoon("p")}
-          required
-          className="form-input"
-        />
-        {pSuggestions.length > 0 && (
-          <ul className="suggestion-list">
-            {pSuggestions.map((s, i) => (
-              <li
-                key={`${s.lat}-${s.lon}-${i}`}
-                className="suggestion-item"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => choosePickup(s)}
-              >
-                {s.label}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <LocationInput
+        placeholder="Pickup location"
+        onSelect={(loc) => {
+          setPickup(loc.label);
+          setPickupLat(loc.lat);
+          setPickupLon(loc.lon);
+        }}
+      />
 
       {/* Drop */}
-      <div className="relative">
-        <input
-          type="text"
-          placeholder="Drop location"
-          value={dropInput}
-          onChange={handleDropInput}
-          onFocus={() => runDropSearch(dropInput)}
-          onBlur={() => closeSuggestionsSoon("d")}
-          required
-          className="form-input"
-        />
-        {dSuggestions.length > 0 && (
-          <ul className="suggestion-list">
-            {dSuggestions.map((s, i) => (
-              <li
-                key={`${s.lat}-${s.lon}-${i}`}
-                className="suggestion-item"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => chooseDrop(s)}
-              >
-                {s.label}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <LocationInput
+        placeholder="Drop location"
+        onSelect={(loc) => {
+          setDrop(loc.label);
+          setDropLat(loc.lat);
+          setDropLon(loc.lon);
+        }}
+      />
 
       {/* Pickup Time */}
       <input

@@ -1,11 +1,10 @@
+// /app/bookings/[id]/page.jsx
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../lib/authOptions";
 import { redirect } from "next/navigation";
 import { connectDB } from "../../../lib/db";
 import Booking from "../../../models/booking";
 import CancelRideButton from "./CancelRideButton";
-
-// ❌ Do NOT export any extra functions from this page file.
 
 export default async function BookingDetails({ params }) {
   const session = await getServerSession(authOptions);
@@ -19,28 +18,42 @@ export default async function BookingDetails({ params }) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl rounded-lg bg-white p-6 shadow">
-      <h1 className="mb-4 text-2xl font-semibold">Ride Details</h1>
+    <div className="mx-auto max-w-2xl rounded-xl bg-white p-6 shadow-lg">
+      <h1 className="mb-5 text-2xl font-bold text-slate-900">
+        Ride Details
+      </h1>
 
-      <div className="space-y-3 text-gray-800">
-        <p><strong>Pickup:</strong> {booking.pickup}</p>
-        <p><strong>Drop:</strong> {booking.drop}</p>
-        <p>
-          <strong>Pickup Time:</strong>{" "}
+      {/* Main info section */}
+      <div className="mb-6 rounded-lg border bg-slate-50 p-4">
+        <p className="text-lg font-semibold text-[var(--brand)]">
+          {booking.pickup} → {booking.drop}
+        </p>
+        <p className="text-sm text-gray-600 mt-1">
           {new Date(booking.pickupTime).toLocaleString("en-IN", {
             timeZone: "Asia/Kolkata",
             dateStyle: "medium",
             timeStyle: "short",
           })}
         </p>
-        <p><strong>Passengers:</strong> {booking.passengers}</p>
-        <p><strong>Trip Type:</strong> {booking.tripType.replace("_", " ")}</p>
-        <p><strong>Fare:</strong> ₹{booking.fare}</p>
-        <p><strong>Status:</strong> {booking.status}</p>
+        <p className="mt-2 text-base font-medium text-slate-800">
+          Fare: ₹{booking.fare}
+        </p>
+        <p className="text-sm text-gray-500">Status: {booking.status}</p>
       </div>
 
+      {/* Extra details */}
+      <div className="space-y-2 text-gray-800 text-sm">
+        <p><strong>Passengers:</strong> {booking.passengers}</p>
+        <p><strong>Trip Type:</strong> {booking.tripType.replace("_", " ")}</p>
+        {booking.phone && <p><strong>Phone:</strong> {booking.phone}</p>}
+        {booking.email && <p><strong>Email:</strong> {booking.email}</p>}
+      </div>
+
+      {/* Cancel option */}
       {booking.status !== "cancelled" && (
-        <CancelRideButton bookingId={params.id} />
+        <div className="mt-6">
+          <CancelRideButton bookingId={params.id} />
+        </div>
       )}
     </div>
   );

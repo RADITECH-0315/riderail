@@ -1,4 +1,3 @@
-// /app/thankyou/page.jsx
 "use client";
 
 import { useSearchParams } from "next/navigation";
@@ -6,7 +5,7 @@ import { useEffect, useState, Suspense } from "react";
 
 function ThankYouContent() {
   const searchParams = useSearchParams();
-  const bookingId = searchParams.get("id") || searchParams.get("bookingId");
+  const bookingId = searchParams.get("bookingId") || searchParams.get("id");
 
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,24 +21,20 @@ function ThankYouContent() {
       .catch(() => setLoading(false));
   }, [bookingId]);
 
-  if (loading)
-    return <p className="text-center p-6">Loading your booking...</p>;
-  if (!booking)
+  if (loading) return <p className="text-center p-6">⏳ Loading your booking...</p>;
+  if (!booking) {
     return (
       <p className="text-center p-6 text-red-500">
-        Booking not found. Please contact support.
+        ❌ Booking not found. Please contact support.
       </p>
     );
+  }
 
   const formattedTime = booking.pickupTime
     ? new Date(booking.pickupTime).toLocaleString("en-IN", {
         timeZone: "Asia/Kolkata",
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
+        dateStyle: "medium",
+        timeStyle: "short",
       })
     : "Not Provided";
 
@@ -49,45 +44,47 @@ function ThankYouContent() {
         ✅ Payment Successful!
       </h1>
       <p className="text-center text-gray-600">
-        Thank you for your booking. Here are your ride details:
+        Thank you for booking with us. Here are your ride details:
       </p>
 
       <div className="space-y-2">
+        <p><strong>Name:</strong> {booking.name || "Not Provided"}</p>
+        <p><strong>Phone:</strong> {booking.phone || "Not Provided"}</p>
         <p>
-          <strong>Name:</strong> {booking.name}
+          <strong>Trip Type:</strong>{" "}
+          {booking.tripType ? booking.tripType.replace("_", " ") : "Not Provided"}
         </p>
-        <p>
-          <strong>Phone:</strong> {booking.phone}
-        </p>
-        <p>
-          <strong>Trip Type:</strong> {booking.tripType}
-        </p>
-        <p>
-          <strong>Pickup:</strong> {booking.pickup || booking.pickupAddress}
-        </p>
-        <p>
-          <strong>Drop:</strong> {booking.drop || booking.dropAddress}
-        </p>
-        <p>
-          <strong>Date & Time:</strong> {formattedTime}
-        </p>
-        <p>
-          <strong>Passengers:</strong> {booking.passengers ?? 1}
-        </p>
-        <p>
-          <strong>Fare:</strong> ₹{booking.fare}
-        </p>
-        <p>
-          <strong>Status:</strong> {booking.status}
-        </p>
-        <p>
-          <strong>Payment Status:</strong> {booking.paymentStatus}
-        </p>
+        <p><strong>Pickup:</strong> {booking.pickup || "Not Provided"}</p>
+        <p><strong>Drop:</strong> {booking.drop || "Not Provided"}</p>
+        <p><strong>Date & Time:</strong> {formattedTime}</p>
+        <p><strong>Passengers:</strong> {booking.passengers ?? 1}</p>
+        <p><strong>Fare:</strong> ₹{booking.fare ?? "0"}</p>
+
+        <div className="flex gap-2 mt-2">
+          <span className={`px-2 py-1 rounded text-xs font-medium ${
+            booking.status === "confirmed"
+              ? "bg-green-100 text-green-700"
+              : booking.status === "pending"
+              ? "bg-yellow-100 text-yellow-700"
+              : "bg-gray-200 text-gray-700"
+          }`}>
+            Status: {booking.status}
+          </span>
+          <span className={`px-2 py-1 rounded text-xs font-medium ${
+            booking.paymentStatus === "paid"
+              ? "bg-green-100 text-green-700"
+              : booking.paymentStatus === "pending"
+              ? "bg-yellow-100 text-yellow-700"
+              : "bg-red-100 text-red-700"
+          }`}>
+            Payment: {booking.paymentStatus}
+          </span>
+        </div>
       </div>
 
-      <div className="flex items-center justify-center gap-3 mt-6">
+      <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
         <a
-          href={`/invoice/${booking.id || booking._id}`}
+          href={`/invoice/${booking._id}`}
           className="inline-block bg-slate-900 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition"
         >
           View / Download Invoice
@@ -99,8 +96,8 @@ function ThankYouContent() {
           Book Another Ride
         </a>
         <a
-          className="inline-block mt-4 underline text-blue-600"
-          href={`/api/invoice/${booking.id || booking._id}`}
+          className="inline-block underline text-blue-600"
+          href={`/api/invoice/${booking._id}`}
           target="_blank"
           rel="noopener noreferrer"
         >
