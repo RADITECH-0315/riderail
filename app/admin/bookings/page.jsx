@@ -40,7 +40,9 @@ export default function AdminBookingsPage() {
   );
 
   const fetchBookings = async () => {
-    const res = await fetch(`/api/admin/bookings?${params}`, { cache: "no-store" });
+    const res = await fetch(`/api/admin/bookings?${params}`, {
+      cache: "no-store",
+    });
     const data = await res.json();
     if (data.success) setBookings(data.bookings);
   };
@@ -48,7 +50,9 @@ export default function AdminBookingsPage() {
   const fetchDrivers = async () => {
     try {
       setLoadingDrivers(true);
-      const res = await fetch("/api/admin/drivers?active=1", { cache: "no-store" });
+      const res = await fetch("/api/admin/drivers?active=1", {
+        cache: "no-store",
+      });
       if (!res.ok) throw new Error("Drivers API not available");
       const data = await res.json();
       setDrivers(data.drivers || []);
@@ -80,7 +84,8 @@ export default function AdminBookingsPage() {
     if (!drivers.length) fetchDrivers();
   };
 
-  const closeModal = () => setModal((m) => ({ ...m, open: false, error: "", busy: false }));
+  const closeModal = () =>
+    setModal((m) => ({ ...m, open: false, error: "", busy: false }));
 
   const assign = async () => {
     if (!modal.booking?._id) return;
@@ -98,11 +103,14 @@ export default function AdminBookingsPage() {
               vehicleType: modal.vehicleType,
             };
 
-      const res = await fetch(`/api/admin/bookings/${modal.booking._id}/assign-driver`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        `/api/admin/bookings/${modal.booking._id}/assign-driver`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!res.ok) throw new Error("Failed to assign driver");
       closeModal();
@@ -151,47 +159,77 @@ export default function AdminBookingsPage() {
 
       {/* Filters row */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <input
-          type="text"
-          placeholder="Search name/phone/pickup/drop"
-          className="border p-2 rounded flex-1"
-          value={filters.q}
-          onChange={(e) => setFilters({ ...filters, q: e.target.value })}
-        />
-        <select
-          className="border p-2 rounded flex-1 sm:flex-none"
-          value={filters.status}
-          onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-        >
-          <option value="all">All statuses</option>
-          <option value="pending">Pending</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="assigned">Assigned</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-        <select
-          className="border p-2 rounded flex-1 sm:flex-none"
-          value={filters.payment}
-          onChange={(e) => setFilters({ ...filters, payment: e.target.value })}
-        >
-          <option value="all">Payment: All</option>
-          <option value="pending">Pending</option>
-          <option value="paid">Paid</option>
-          <option value="failed">Failed</option>
-        </select>
-        <input
-          type="date"
-          className="border p-2 rounded flex-1 sm:flex-none"
-          value={filters.startDate}
-          onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-        />
-        <input
-          type="date"
-          className="border p-2 rounded flex-1 sm:flex-none"
-          value={filters.endDate}
-          onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-        />
+        {/* Search */}
+        <div className="flex flex-col flex-1">
+          <label className="text-xs text-gray-500 mb-1">Search</label>
+          <input
+            type="text"
+            placeholder="Name / Phone / Pickup / Drop"
+            className="border p-2 rounded"
+            value={filters.q}
+            onChange={(e) => setFilters({ ...filters, q: e.target.value })}
+          />
+        </div>
+
+        {/* Status */}
+        <div className="flex flex-col flex-1 sm:flex-none">
+          <label className="text-xs text-gray-500 mb-1">Status</label>
+          <select
+            className="border p-2 rounded"
+            value={filters.status}
+            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+          >
+            <option value="all">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="assigned">Assigned</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        {/* Payment */}
+        <div className="flex flex-col flex-1 sm:flex-none">
+          <label className="text-xs text-gray-500 mb-1">Payment</label>
+          <select
+            className="border p-2 rounded"
+            value={filters.payment}
+            onChange={(e) =>
+              setFilters({ ...filters, payment: e.target.value })
+            }
+          >
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+            <option value="failed">Failed</option>
+          </select>
+        </div>
+
+        {/* Start Date */}
+        <div className="flex flex-col flex-1 sm:flex-none">
+          <label className="text-xs text-gray-500 mb-1">Start Date</label>
+          <input
+            type="date"
+            className="border p-2 rounded"
+            value={filters.startDate}
+            onChange={(e) =>
+              setFilters({ ...filters, startDate: e.target.value })
+            }
+          />
+        </div>
+
+        {/* End Date */}
+        <div className="flex flex-col flex-1 sm:flex-none">
+          <label className="text-xs text-gray-500 mb-1">End Date</label>
+          <input
+            type="date"
+            className="border p-2 rounded"
+            value={filters.endDate}
+            onChange={(e) =>
+              setFilters({ ...filters, endDate: e.target.value })
+            }
+          />
+        </div>
       </div>
 
       {/* Desktop table */}
@@ -219,22 +257,31 @@ export default function AdminBookingsPage() {
                   <tr key={b._id} className="align-top">
                     <td className="border p-2">{b.name}</td>
                     <td className="border p-2">{b.phone}</td>
-                    <td className="border p-2 max-w-[320px]">{b.pickup} → {b.drop}</td>
+                    <td className="border p-2 max-w-[320px]">
+                      {b.pickup} → {b.drop}
+                    </td>
                     <td className="border p-2">{b.status}</td>
                     <td className="border p-2">{b.paymentStatus}</td>
                     <td className="border p-2">
                       {b.status === "assigned" && b.driver?.name ? (
                         <div className="text-xs text-green-700">
                           <div className="font-medium">Assigned</div>
-                          <div>{b.driver.name} · {b.driver.phone}</div>
-                          <div>{b.driver.modelName} ({b.driver.vehicleType}) • {b.driver.carNumber}</div>
+                          <div>
+                            {b.driver.name} · {b.driver.phone}
+                          </div>
+                          <div>
+                            {b.driver.modelName} ({b.driver.vehicleType}) •{" "}
+                            {b.driver.carNumber}
+                          </div>
                         </div>
                       ) : (
                         <span className="text-red-500">Not Assigned</span>
                       )}
                     </td>
                     <td className="border p-2">₹{b.fare}</td>
-                    <td className="border p-2">{new Date(b.createdAt).toLocaleString()}</td>
+                    <td className="border p-2">
+                      {new Date(b.createdAt).toLocaleString()}
+                    </td>
                     <td className="border p-2">
                       <div className="flex flex-col sm:flex-row gap-2">
                         <button
@@ -262,20 +309,31 @@ export default function AdminBookingsPage() {
           {/* Mobile cards */}
           <div className="grid gap-4 md:hidden">
             {bookings.map((b) => (
-              <div key={b._id} className="bg-white rounded-lg shadow p-4 border">
+              <div
+                key={b._id}
+                className="bg-white rounded-lg shadow p-4 border"
+              >
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-semibold text-sm">{b.name} · {b.phone}</h3>
-                  <span className="text-xs text-gray-500">{new Date(b.createdAt).toLocaleDateString()}</span>
+                  <h3 className="font-semibold text-sm">
+                    {b.name} · {b.phone}
+                  </h3>
+                  <span className="text-xs text-gray-500">
+                    {new Date(b.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
-                <p className="text-xs text-gray-600 mb-2">{b.pickup} → {b.drop}</p>
+                <p className="text-xs text-gray-600 mb-2">
+                  {b.pickup} → {b.drop}
+                </p>
                 <p className="text-xs mb-2">
                   <span className="font-medium">Status:</span> {b.status} |{" "}
-                  <span className="font-medium">Payment:</span> {b.paymentStatus}
+                  <span className="font-medium">Payment:</span>{" "}
+                  {b.paymentStatus}
                 </p>
                 <p className="text-xs mb-2">
                   {b.status === "assigned" && b.driver?.name ? (
                     <span className="text-green-700">
-                      Assigned to {b.driver.name} ({b.driver.vehicleType}, {b.driver.carNumber})
+                      Assigned to {b.driver.name} ({b.driver.vehicleType},{" "}
+                      {b.driver.carNumber})
                     </span>
                   ) : (
                     <span className="text-red-500">Not Assigned</span>
@@ -320,9 +378,15 @@ export default function AdminBookingsPage() {
             {/* Booking Info */}
             {modal.booking && (
               <div className="text-sm mb-4 text-gray-700">
-                <div className="font-medium mb-1">{modal.booking.name} ({modal.booking.phone})</div>
-                <div className="mb-1">{modal.booking.pickup} → {modal.booking.drop}</div>
-                <div className="text-gray-500">Pickup: {modal.booking.pickupTime || "-"}</div>
+                <div className="font-medium mb-1">
+                  {modal.booking.name} ({modal.booking.phone})
+                </div>
+                <div className="mb-1">
+                  {modal.booking.pickup} → {modal.booking.drop}
+                </div>
+                <div className="text-gray-500">
+                  Pickup: {modal.booking.pickupTime || "-"}
+                </div>
               </div>
             )}
 
@@ -356,18 +420,24 @@ export default function AdminBookingsPage() {
                     className="border rounded p-2 w-full"
                     value={modal.selectedDriverId}
                     onChange={(e) =>
-                      setModal((m) => ({ ...m, selectedDriverId: e.target.value }))
+                      setModal((m) => ({
+                        ...m,
+                        selectedDriverId: e.target.value,
+                      }))
                     }
                   >
                     <option value="">— Choose driver —</option>
                     {drivers.map((d) => (
                       <option key={d._id} value={d._id}>
-                        {d.name} · {d.phone} · {d.modelName} ({d.vehicleType}) • {d.carNumber}
+                        {d.name} · {d.phone} · {d.modelName} ({d.vehicleType}) •{" "}
+                        {d.carNumber}
                       </option>
                     ))}
                   </select>
                 ) : (
-                  <div className="text-sm text-amber-600">No drivers found. Please create one manually.</div>
+                  <div className="text-sm text-amber-600">
+                    No drivers found. Please create one manually.
+                  </div>
                 )}
               </div>
             )}
@@ -380,33 +450,43 @@ export default function AdminBookingsPage() {
                   placeholder="Driver Name"
                   className="border rounded p-2 w-full"
                   value={modal.name}
-                  onChange={(e) => setModal((m) => ({ ...m, name: e.target.value }))}
+                  onChange={(e) =>
+                    setModal((m) => ({ ...m, name: e.target.value }))
+                  }
                 />
                 <input
                   type="text"
                   placeholder="Phone"
                   className="border rounded p-2 w-full"
                   value={modal.phone}
-                  onChange={(e) => setModal((m) => ({ ...m, phone: e.target.value }))}
+                  onChange={(e) =>
+                    setModal((m) => ({ ...m, phone: e.target.value }))
+                  }
                 />
                 <input
                   type="text"
                   placeholder="Car Number"
                   className="border rounded p-2 w-full"
                   value={modal.carNumber}
-                  onChange={(e) => setModal((m) => ({ ...m, carNumber: e.target.value }))}
+                  onChange={(e) =>
+                    setModal((m) => ({ ...m, carNumber: e.target.value }))
+                  }
                 />
                 <input
                   type="text"
                   placeholder="Model Name"
                   className="border rounded p-2 w-full"
                   value={modal.modelName}
-                  onChange={(e) => setModal((m) => ({ ...m, modelName: e.target.value }))}
+                  onChange={(e) =>
+                    setModal((m) => ({ ...m, modelName: e.target.value }))
+                  }
                 />
                 <select
                   className="border rounded p-2 w-full"
                   value={modal.vehicleType}
-                  onChange={(e) => setModal((m) => ({ ...m, vehicleType: e.target.value }))}
+                  onChange={(e) =>
+                    setModal((m) => ({ ...m, vehicleType: e.target.value }))
+                  }
                 >
                   <option value="">Select Vehicle Type</option>
                   <option value="sedan">Sedan</option>
