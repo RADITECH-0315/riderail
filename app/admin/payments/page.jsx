@@ -25,7 +25,7 @@ export default function PaymentsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-4 sm:p-6">
       <h2 className="text-xl font-semibold">Payments</h2>
 
       {/* Filters */}
@@ -36,14 +36,14 @@ export default function PaymentsPage() {
           placeholder="Search name, phone, ID..."
           value={filters.q}
           onChange={handleChange}
-          className="border p-2 rounded w-64"
+          className="border p-2 rounded w-full sm:w-64"
         />
 
         <select
           name="status"
           value={filters.status}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded w-full sm:w-auto"
         >
           <option value="all">Status: All</option>
           <option value="paid">Paid</option>
@@ -56,7 +56,7 @@ export default function PaymentsPage() {
           name="provider"
           value={filters.provider}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded w-full sm:w-auto"
         >
           <option value="all">Provider: All</option>
           <option value="Stripe">Stripe</option>
@@ -69,19 +69,19 @@ export default function PaymentsPage() {
           name="startDate"
           value={filters.startDate}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded w-full sm:w-auto"
         />
         <input
           type="date"
           name="endDate"
           value={filters.endDate}
           onChange={handleChange}
-          className="border p-2 rounded"
+          className="border p-2 rounded w-full sm:w-auto"
         />
       </div>
 
-      {/* Table */}
-      <div className="overflow-auto">
+      {/* Desktop Table */}
+      <div className="hidden md:block overflow-auto">
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="text-left border-b bg-gray-50">
@@ -147,6 +147,60 @@ export default function PaymentsPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="grid gap-4 md:hidden">
+        {rows.map((r, idx) => (
+          <div
+            key={r.paymentId + idx}
+            className="p-4 border rounded-lg shadow-sm bg-gray-50"
+          >
+            <p className="text-sm font-medium">
+              {idx + 1}. {r.customer || "—"}
+            </p>
+            <p className="text-xs text-gray-600">Phone: {r.phone || "—"}</p>
+            <p className="text-xs mt-1">
+              Amount: ₹{r.amount?.toFixed(2)} {r.currency}
+            </p>
+            <p className="text-xs">Provider: {r.provider}</p>
+            <p className="text-xs mt-1">
+              Status:{" "}
+              <span
+                className={`px-2 py-0.5 rounded text-xs font-medium ${
+                  r.status === "paid"
+                    ? "bg-green-100 text-green-700"
+                    : r.status === "failed"
+                    ? "bg-red-100 text-red-600"
+                    : "bg-yellow-100 text-yellow-700"
+                }`}
+              >
+                {r.status}
+              </span>
+            </p>
+            <p className="text-xs mt-1 font-mono">Payment ID: {r.paymentId}</p>
+            <p className="text-xs mt-1">
+              Booking:{" "}
+              {r.booking ? (
+                <Link
+                  href={`/admin/bookings?search=${r.booking}`}
+                  className="text-blue-500 underline font-mono"
+                >
+                  {r.booking}
+                </Link>
+              ) : (
+                "-"
+              )}
+            </p>
+            <p className="text-xs mt-1">
+              Date: {r.date ? new Date(r.date).toLocaleString() : "-"}
+            </p>
+          </div>
+        ))}
+
+        {!isLoading && rows.length === 0 && (
+          <p className="text-center text-gray-500">No payments found.</p>
+        )}
       </div>
     </div>
   );
