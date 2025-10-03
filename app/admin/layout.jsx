@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../lib/authOptions";
+import { authOptions } from "../../lib/authOptions";  // fixed relative path
 import { redirect } from "next/navigation";
 
 export const metadata = { title: "RVM Admin" };
 
 export default async function AdminLayout({ children }) {
   const session = await getServerSession(authOptions);
-  if (!session?.user || session.user.role !== "admin") redirect("/login");
+
+  if (!session?.user || session.user.role !== "admin") {
+    redirect("/login");
+  }
 
   return (
     <div className="min-h-screen grid grid-rows-[auto,1fr]">

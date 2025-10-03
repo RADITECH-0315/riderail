@@ -8,21 +8,21 @@ import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  // ✅ Auto-redirect when session is loaded
+  // After login, when session is available, route by role
   useEffect(() => {
-    if (session?.user?.role === "admin") {
-      router.push("/admin/dashboard");
-    } else if (session?.user?.role === "customer") {
-      router.push("/#book");
+    if (status === "authenticated") {
+      const role = session?.user?.role;
+      if (role === "admin") router.replace("/admin/dashboard");
+      else if (role === "customer") router.replace("/bookings");
     }
-  }, [session, router]);
+  }, [status, session, router]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -38,14 +38,17 @@ export default function LoginPage() {
       const res = await signIn("credentials", {
         email: email.trim(),
         password: password.trim(),
-        redirect: false, // 🚨 no auto redirect, we handle manually
+        redirect: false, // manual redirect using session effect
       });
 
       if (res?.error) {
         setError("Invalid email or password.");
+      } else {
+        // force re-check of session so the effect above runs immediately
+        router.refresh();
       }
     } catch (err) {
-      console.error(err);
+      console.error("Login error:", err);
       setError("Something went wrong. Please try again.");
     } finally {
       setBusy(false);
@@ -64,6 +67,7 @@ export default function LoginPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          autoComplete="email"
         />
 
         <input
@@ -73,6 +77,7 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          autoComplete="current-password"
         />
 
         <button

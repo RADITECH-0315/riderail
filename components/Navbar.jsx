@@ -1,8 +1,11 @@
+// components/Navbar.jsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
+
 
 export default function Navbar() {
   const { data: session } = useSession();
@@ -70,7 +73,14 @@ export default function Navbar() {
       <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between px-4 sm:px-6 py-3">
         {/* Brand */}
         <Link href="/" className="flex items-center gap-3" onClick={closeMenu}>
-          <img src="/logo.png" alt="RVM Rideway Logo" className="h-12 w-12 sm:h-14 sm:w-14" />
+          <Image
+            src="/l2.png" // must be inside /public folder
+            alt="RVM Rideway Logo"
+            width={56} // ~14 * 4 (sm:h-14)
+            height={56}
+            className="h-12 w-12 sm:h-14 sm:w-14"
+            priority // ensures logo loads first
+          />
           <span className="text-xl sm:text-2xl font-extrabold tracking-wide text-slate-900">
             RVM{" "}
             <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
@@ -107,7 +117,10 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Link href="/login" className="hover:text-[var(--brand)] transition">
+              <Link
+                href="/login"
+                className="hover:text-[var(--brand)] transition"
+              >
                 Login
               </Link>
               <Link

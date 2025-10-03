@@ -2,12 +2,18 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
-/**
- * Booking Schema
- * - pickupTime stored as string "YYYY-MM-DDTHH:mm" (local time)
- * - passengers included
- * - professional payment + ride status handling
- */
+const DriverSnapshotSchema = new Schema(
+  {
+    driverId: { type: Schema.Types.ObjectId, ref: "Driver" },
+    name: String,
+    phone: String,
+    vehicleType: { type: String, enum: ["sedan", "suv", "premium"] },
+    carNumber: String,
+    modelName: String,
+  },
+  { _id: false }
+);
+
 const BookingSchema = new Schema(
   {
     name: { type: String, required: true },
@@ -16,14 +22,7 @@ const BookingSchema = new Schema(
 
     tripType: {
       type: String,
-      enum: [
-        "airport_city",
-        "city_airport",
-        "city_city",
-        "outstation",
-        "rental",
-        "local",
-      ],
+      enum: ["airport_city", "city_airport", "city_city", "outstation", "rental", "local"],
       required: true,
     },
 
@@ -35,51 +34,47 @@ const BookingSchema = new Schema(
     dropLat: { type: Number, required: true },
     dropLon: { type: Number, required: true },
 
-    pickupTime: { type: String, required: true }, // stored as local string
+    pickupTime: { type: String, required: true },
 
     passengers: { type: Number, default: 1, min: 1 },
-    vehicleType: {
-      type: String,
-      enum: ["sedan", "suv", "premium"],
-      default: "sedan",
-    },
+    vehicleType: { type: String, enum: ["sedan", "suv", "premium"], default: "sedan" },
 
     distanceKm: Number,
     durationMin: Number,
     fare: Number,
     currency: { type: String, default: "INR" },
 
-    // Ride status
     status: {
       type: String,
       enum: ["pending", "confirmed", "assigned", "completed", "cancelled"],
       default: "pending",
     },
 
-    // Payment status
     paymentStatus: {
       type: String,
       enum: ["pending", "paid", "failed"],
-      default: "pending",   // ✅ always start as pending
+      default: "pending",
     },
 
     paymentOrderId: String,
     upiTransactionId: String,
     stripeSessionId: String,
     stripePaymentIntentId: String,
-
     invoiceId: String,
 
     whatsappMessageId: String,
     emailMessageId: String,
 
-    assignedDriverId: String,
-    meta: Schema.Types.Mixed,
+    // legacy id (kept for filters/compat)
+    assignedDriverId: { type: String, default: null },
 
+    // snapshot shown in UI
+    driver: DriverSnapshotSchema,
+
+    meta: Schema.Types.Mixed,
     userId: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );
 
-export default mongoose.models.Booking ||
-  mongoose.model("Booking", BookingSchema);
+export default mongoose.models.Booking || mongoose.model("Booking", BookingSchema);
