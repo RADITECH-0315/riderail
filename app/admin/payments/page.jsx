@@ -29,55 +29,76 @@ export default function PaymentsPage() {
       <h2 className="text-xl font-semibold">Payments</h2>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <input
-          type="text"
-          name="q"
-          placeholder="Search name, phone, ID..."
-          value={filters.q}
-          onChange={handleChange}
-          className="border p-2 rounded w-full sm:w-64"
-        />
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-start mb-4">
+        {/* Search */}
+        <div className="flex flex-col flex-1">
+          <label className="text-xs text-gray-500 mb-1">Search</label>
+          <input
+            type="text"
+            name="q"
+            placeholder="Name, Phone, Payment ID..."
+            value={filters.q}
+            onChange={handleChange}
+            className="border p-2 rounded"
+          />
+        </div>
 
-        <select
-          name="status"
-          value={filters.status}
-          onChange={handleChange}
-          className="border p-2 rounded w-full sm:w-auto"
-        >
-          <option value="all">Status: All</option>
-          <option value="paid">Paid</option>
-          <option value="pending">Pending</option>
-          <option value="failed">Failed</option>
-          <option value="created">Created</option>
-        </select>
+        {/* Status */}
+        <div className="flex flex-col flex-1 sm:flex-none">
+          <label className="text-xs text-gray-500 mb-1">Status</label>
+          <select
+            name="status"
+            value={filters.status}
+            onChange={handleChange}
+            className="border p-2 rounded"
+          >
+            <option value="all">All</option>
+            <option value="paid">Paid</option>
+            <option value="pending">Pending</option>
+            <option value="failed">Failed</option>
+            <option value="created">Created</option>
+          </select>
+        </div>
 
-        <select
-          name="provider"
-          value={filters.provider}
-          onChange={handleChange}
-          className="border p-2 rounded w-full sm:w-auto"
-        >
-          <option value="all">Provider: All</option>
-          <option value="Stripe">Stripe</option>
-          <option value="Razorpay">Razorpay</option>
-          <option value="UPI">UPI</option>
-        </select>
+        {/* Provider */}
+        <div className="flex flex-col flex-1 sm:flex-none">
+          <label className="text-xs text-gray-500 mb-1">Provider</label>
+          <select
+            name="provider"
+            value={filters.provider}
+            onChange={handleChange}
+            className="border p-2 rounded"
+          >
+            <option value="all">All</option>
+            <option value="Stripe">Stripe</option>
+            <option value="Razorpay">Razorpay</option>
+            <option value="UPI">UPI</option>
+          </select>
+        </div>
 
-        <input
-          type="date"
-          name="startDate"
-          value={filters.startDate}
-          onChange={handleChange}
-          className="border p-2 rounded w-full sm:w-auto"
-        />
-        <input
-          type="date"
-          name="endDate"
-          value={filters.endDate}
-          onChange={handleChange}
-          className="border p-2 rounded w-full sm:w-auto"
-        />
+        {/* Start Date */}
+        <div className="flex flex-col flex-1 sm:flex-none">
+          <label className="text-xs text-gray-500 mb-1">Start Date</label>
+          <input
+            type="date"
+            name="startDate"
+            value={filters.startDate}
+            onChange={handleChange}
+            className="border p-2 rounded"
+          />
+        </div>
+
+        {/* End Date */}
+        <div className="flex flex-col flex-1 sm:flex-none">
+          <label className="text-xs text-gray-500 mb-1">End Date</label>
+          <input
+            type="date"
+            name="endDate"
+            value={filters.endDate}
+            onChange={handleChange}
+            className="border p-2 rounded"
+          />
+        </div>
       </div>
 
       {/* Desktop Table */}
